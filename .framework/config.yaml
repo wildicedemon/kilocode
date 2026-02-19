@@ -1,0 +1,179 @@
+# AI Agentic Autonomous SDLC Framework
+# Main Configuration File
+# This file configures the autonomous software development lifecycle management system for Kilo Code
+
+# =============================================================================
+# FRAMEWORK METADATA
+# =============================================================================
+framework:
+  name: "AI Agentic Autonomous SDLC Framework"
+  version: "1.0.0"
+  description: "Autonomous software development lifecycle management for Kilo Code"
+
+# =============================================================================
+# SDLC PHASES CONFIGURATION
+# =============================================================================
+# Each phase represents a stage in the software development lifecycle.
+# Phases can be individually enabled/disabled and configured with timeouts
+# and checkpoint intervals for safe recovery.
+sdlc:
+  # Research Phase: Requirements gathering, context analysis, and documentation review
+  research:
+    enabled: true
+    timeout: 1800  # Maximum time in seconds (30 minutes)
+    checkpoint_interval: 300  # Save state every 5 minutes
+  
+  # Planning Phase: Architecture design, task decomposition, and strategy formulation
+  planning:
+    enabled: true
+    timeout: 1200  # Maximum time in seconds (20 minutes)
+    checkpoint_interval: 300  # Save state every 5 minutes
+  
+  # Implementation Phase: Code writing, refactoring, and actual development work
+  implementation:
+    enabled: true
+    timeout: 3600  # Maximum time in seconds (60 minutes)
+    checkpoint_interval: 600  # Save state every 10 minutes
+    max_iterations: 10  # Maximum number of implementation iterations per task
+  
+  # Verification Phase: Testing, validation, quality assurance, and coverage analysis
+  verification:
+    enabled: true
+    timeout: 1800  # Maximum time in seconds (30 minutes)
+    test_coverage_threshold: 80  # Minimum required test coverage percentage
+
+# =============================================================================
+# CODE SCANNER CONFIGURATION
+# =============================================================================
+# The scanner continuously analyzes code for anti-patterns, architectural issues,
+# performance problems, and security vulnerabilities during development.
+scanner:
+  enabled: true
+  # Analysis passes to execute during scanning
+  passes:
+    - anti-patterns    # Detect code smells and anti-patterns
+    - architecture     # Validate architectural constraints
+    - performance      # Identify performance bottlenecks
+    - security         # Check for security vulnerabilities
+  continuous: true  # Enable continuous scanning during implementation
+  state_file: ".framework/scanner-state.md"      # Scanner state persistence
+  repertoire_file: ".framework/scanner-repertoire.md"  # Known issues database
+  # MCP servers to use for enhanced code analysis
+  mcp_servers:
+    - codegraph-context  # Code graph analysis for context-aware scanning
+
+# =============================================================================
+# WASTE DETECTION CONFIGURATION
+# =============================================================================
+# Waste detection monitors token usage and detects inefficient patterns
+# to prevent runaway costs and resource exhaustion.
+waste_detection:
+  enabled: true
+  # Token usage thresholds for alerts and intervention
+  token_thresholds:
+    warn: 15000   # Warning threshold - log notification
+    pause: 30000  # Pause threshold - halt execution for review
+  loop_detection: true  # Detect and alert on repetitive patterns
+  # Alert channels for waste detection notifications
+  alert_channels:
+    - console    # Log to console output
+    - langfuse   # Send to Langfuse for analytics
+
+# =============================================================================
+# COST OVERSIGHT CONFIGURATION
+# =============================================================================
+# Cost oversight tracks API usage costs and enforces budget limits
+# to prevent unexpected expenses.
+cost_oversight:
+  enabled: true
+  budget_per_task: 10.00      # Maximum USD cost per individual task
+  budget_per_phase: 50.00     # Maximum USD cost per SDLC phase
+  currency: "USD"             # Currency for budget tracking
+  langfuse_integration: true  # Enable Langfuse cost tracking integration
+
+# =============================================================================
+# WEBHOOK CONFIGURATION
+# =============================================================================
+# Webhooks enable external integrations with GitHub, CI/CD pipelines,
+# and other services for event-driven automation.
+webhooks:
+  enabled: false
+  port: 3000  # HTTP server port for webhook listener
+  # GitHub webhook integration
+  github:
+    enabled: false
+    secret: "${GITHUB_WEBHOOK_SECRET}"  # GitHub webhook secret (env var)
+    # Events to subscribe to
+    events:
+      - issues          # Issue creation and updates
+      - pull_request    # PR creation, updates, and merges
+      - workflow_run    # CI/CD workflow execution events
+
+# =============================================================================
+# BOOTSTRAP CONFIGURATION
+# =============================================================================
+# Bootstrap settings control initialization behavior and MCP server setup.
+bootstrap:
+  auto_check_updates: true  # Automatically check for framework updates
+  # MCP servers to initialize on startup
+  mcp_servers:
+    codegraph-context:
+      enabled: true
+      package: "@kilocode/mcp-codegraph"  # NPM package name
+    rag-memory:
+      enabled: true
+      package: "@kilocode/mcp-rag-memory"
+    taskmaster:
+      enabled: true
+      package: "@kilocode/mcp-taskmaster"
+
+# =============================================================================
+# MODES CONFIGURATION
+# =============================================================================
+# Modes define specialized AI personas for different aspects of the SDLC.
+# Each mode can be enabled/disabled and has its own configuration.
+modes:
+  orchestrator:
+    enabled: true
+    config: ".framework/modes/orchestrator.yaml"
+  requirements:
+    enabled: true
+    config: ".framework/modes/requirements.yaml"
+  scanner:
+    enabled: true
+    config: ".framework/modes/scanner.yaml"
+  review:
+    enabled: true
+    config: ".framework/modes/review.yaml"
+
+# =============================================================================
+# VOICE CONFIGURATION
+# =============================================================================
+# Voice settings enable audio input/output and persona-based voice synthesis.
+voice:
+  enabled: false
+  # PersonaPlex provides AI voice personas for different interaction styles
+  personaPlex:
+    enabled: false
+    config_path: ".framework/voice/personas.yaml"
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+# Logging controls diagnostic output and audit trail generation.
+logging:
+  level: "info"         # Log level: debug, info, warn, error
+  output: ".framework/logs/"  # Directory for log files
+  rotation: "daily"     # Log rotation strategy: daily, hourly, size
+
+# =============================================================================
+# ENVIRONMENT VARIABLES REFERENCE
+# =============================================================================
+# The following environment variables can be used in this config:
+#
+# ${GITHUB_WEBHOOK_SECRET}  - Secret for GitHub webhook verification
+# ${LANGFUSE_PUBLIC_KEY}    - Langfuse public API key
+# ${LANGFUSE_SECRET_KEY}    - Langfuse secret API key
+# ${OPENAI_API_KEY}         - OpenAI API key (if using OpenAI models)
+# ${ANTHROPIC_API_KEY}      - Anthropic API key (if using Claude models)
+# =============================================================================

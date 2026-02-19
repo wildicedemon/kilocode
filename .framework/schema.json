@@ -1,0 +1,468 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://kilocode.ai/framework/config-schema.json",
+  "title": "AI Agentic Autonomous SDLC Framework Configuration",
+  "description": "JSON Schema for validating .framework/config.yaml - the autonomous software development lifecycle management configuration for Kilo Code",
+  "type": "object",
+  "required": ["framework", "sdlc", "scanner", "waste_detection", "cost_oversight", "webhooks", "bootstrap", "modes", "voice", "logging"],
+  "additionalProperties": false,
+  "properties": {
+    "framework": {
+      "type": "object",
+      "description": "Framework metadata and identification",
+      "required": ["name", "version", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the framework",
+          "minLength": 1,
+          "examples": ["AI Agentic Autonomous SDLC Framework"]
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of the framework",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9.-]+)?$",
+          "examples": ["1.0.0", "1.2.3-beta"]
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the framework's purpose",
+          "minLength": 1,
+          "examples": ["Autonomous software development lifecycle management for Kilo Code"]
+        }
+      }
+    },
+    "sdlc": {
+      "type": "object",
+      "description": "Software Development Lifecycle phases configuration",
+      "required": ["research", "planning", "implementation", "verification"],
+      "additionalProperties": false,
+      "properties": {
+        "research": {
+          "$ref": "#/definitions/sdlcPhase",
+          "description": "Research phase: Requirements gathering, context analysis, and documentation review"
+        },
+        "planning": {
+          "$ref": "#/definitions/sdlcPhase",
+          "description": "Planning phase: Architecture design, task decomposition, and strategy formulation"
+        },
+        "implementation": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/sdlcPhase"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "max_iterations": {
+                  "type": "integer",
+                  "description": "Maximum number of implementation iterations per task",
+                  "minimum": 1,
+                  "examples": [10]
+                }
+              }
+            }
+          ],
+          "description": "Implementation phase: Code writing, refactoring, and actual development work"
+        },
+        "verification": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/sdlcPhase"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "test_coverage_threshold": {
+                  "type": "integer",
+                  "description": "Minimum required test coverage percentage",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "examples": [80]
+                }
+              }
+            }
+          ],
+          "description": "Verification phase: Testing, validation, quality assurance, and coverage analysis"
+        }
+      }
+    },
+    "scanner": {
+      "type": "object",
+      "description": "Code scanner configuration for continuous code analysis",
+      "required": ["enabled", "passes", "continuous", "state_file", "repertoire_file", "mcp_servers"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable the code scanner",
+          "default": true
+        },
+        "passes": {
+          "type": "array",
+          "description": "Analysis passes to execute during scanning",
+          "items": {
+            "type": "string",
+            "enum": ["anti-patterns", "architecture", "performance", "security"],
+            "description": "Type of analysis pass to run"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [["anti-patterns", "architecture", "performance", "security"]]
+        },
+        "continuous": {
+          "type": "boolean",
+          "description": "Enable continuous scanning during implementation",
+          "default": true
+        },
+        "state_file": {
+          "type": "string",
+          "description": "Path to scanner state persistence file",
+          "examples": [".framework/scanner-state.md"]
+        },
+        "repertoire_file": {
+          "type": "string",
+          "description": "Path to known issues database file",
+          "examples": [".framework/scanner-repertoire.md"]
+        },
+        "mcp_servers": {
+          "type": "array",
+          "description": "MCP servers to use for enhanced code analysis",
+          "items": {
+            "type": "string",
+            "description": "MCP server identifier"
+          },
+          "examples": [["codegraph-context"]]
+        }
+      }
+    },
+    "waste_detection": {
+      "type": "object",
+      "description": "Waste detection configuration for monitoring token usage and inefficient patterns",
+      "required": ["enabled", "token_thresholds", "loop_detection", "alert_channels"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable waste detection",
+          "default": true
+        },
+        "token_thresholds": {
+          "type": "object",
+          "description": "Token usage thresholds for alerts and intervention",
+          "required": ["warn", "pause"],
+          "additionalProperties": false,
+          "properties": {
+            "warn": {
+              "type": "integer",
+              "description": "Warning threshold - log notification",
+              "minimum": 0,
+              "examples": [15000]
+            },
+            "pause": {
+              "type": "integer",
+              "description": "Pause threshold - halt execution for review",
+              "minimum": 0,
+              "examples": [30000]
+            }
+          }
+        },
+        "loop_detection": {
+          "type": "boolean",
+          "description": "Detect and alert on repetitive patterns",
+          "default": true
+        },
+        "alert_channels": {
+          "type": "array",
+          "description": "Alert channels for waste detection notifications",
+          "items": {
+            "type": "string",
+            "enum": ["console", "langfuse", "webhook", "email"],
+            "description": "Channel for waste detection alerts"
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "examples": [["console", "langfuse"]]
+        }
+      }
+    },
+    "cost_oversight": {
+      "type": "object",
+      "description": "Cost oversight configuration for tracking API usage costs and enforcing budget limits",
+      "required": ["enabled", "budget_per_task", "budget_per_phase", "currency", "langfuse_integration"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable cost oversight",
+          "default": true
+        },
+        "budget_per_task": {
+          "type": "number",
+          "description": "Maximum cost per individual task in the specified currency",
+          "minimum": 0,
+          "examples": [10.0]
+        },
+        "budget_per_phase": {
+          "type": "number",
+          "description": "Maximum cost per SDLC phase in the specified currency",
+          "minimum": 0,
+          "examples": [50.0]
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency for budget tracking",
+          "enum": ["USD", "EUR", "GBP", "JPY", "CAD", "AUD"],
+          "default": "USD",
+          "examples": ["USD"]
+        },
+        "langfuse_integration": {
+          "type": "boolean",
+          "description": "Enable Langfuse cost tracking integration",
+          "default": true
+        }
+      }
+    },
+    "webhooks": {
+      "type": "object",
+      "description": "Webhook configuration for external integrations",
+      "required": ["enabled", "port", "github"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable webhook server",
+          "default": false
+        },
+        "port": {
+          "type": "integer",
+          "description": "HTTP server port for webhook listener",
+          "minimum": 1,
+          "maximum": 65535,
+          "examples": [3000]
+        },
+        "github": {
+          "type": "object",
+          "description": "GitHub webhook integration configuration",
+          "required": ["enabled", "secret", "events"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable GitHub webhook integration",
+              "default": false
+            },
+            "secret": {
+              "type": "string",
+              "description": "GitHub webhook secret for HMAC verification. Can be an environment variable reference like ${GITHUB_WEBHOOK_SECRET}",
+              "examples": ["${GITHUB_WEBHOOK_SECRET}", "whsec_xxxxxxxxxxxxxxxx"]
+            },
+            "events": {
+              "type": "array",
+              "description": "GitHub events to subscribe to",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "issues",
+                  "pull_request",
+                  "workflow_run",
+                  "push",
+                  "release",
+                  "create",
+                  "delete"
+                ],
+                "description": "GitHub event type to listen for"
+              },
+              "minItems": 1,
+              "uniqueItems": true,
+              "examples": [["issues", "pull_request", "workflow_run"]]
+            }
+          }
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "description": "Bootstrap configuration for initialization behavior and MCP server setup",
+      "required": ["auto_check_updates", "mcp_servers"],
+      "additionalProperties": false,
+      "properties": {
+        "auto_check_updates": {
+          "type": "boolean",
+          "description": "Automatically check for framework updates on startup",
+          "default": true
+        },
+        "mcp_servers": {
+          "type": "object",
+          "description": "MCP servers to initialize on startup",
+          "required": ["codegraph-context", "rag-memory", "taskmaster"],
+          "additionalProperties": {
+            "$ref": "#/definitions/mcpServerConfig"
+          },
+          "properties": {
+            "codegraph-context": {
+              "$ref": "#/definitions/mcpServerConfig",
+              "description": "Code graph analysis for context-aware scanning"
+            },
+            "rag-memory": {
+              "$ref": "#/definitions/mcpServerConfig",
+              "description": "RAG-based memory storage and retrieval"
+            },
+            "taskmaster": {
+              "$ref": "#/definitions/mcpServerConfig",
+              "description": "Task management and orchestration"
+            }
+          }
+        }
+      }
+    },
+    "modes": {
+      "type": "object",
+      "description": "AI mode configurations for specialized personas",
+      "required": ["orchestrator", "requirements", "scanner", "review"],
+      "additionalProperties": {
+        "$ref": "#/definitions/modeConfig"
+      },
+      "properties": {
+        "orchestrator": {
+          "$ref": "#/definitions/modeConfig",
+          "description": "Workflow coordination mode for managing SDLC phases"
+        },
+        "requirements": {
+          "$ref": "#/definitions/modeConfig",
+          "description": "Requirements analysis and specification mode"
+        },
+        "scanner": {
+          "$ref": "#/definitions/modeConfig",
+          "description": "Deep codebase analysis mode"
+        },
+        "review": {
+          "$ref": "#/definitions/modeConfig",
+          "description": "Code review and quality assurance mode"
+        }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "description": "Voice settings for audio input/output and persona-based voice synthesis",
+      "required": ["enabled", "personaPlex"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable voice features",
+          "default": false
+        },
+        "personaPlex": {
+          "type": "object",
+          "description": "PersonaPlex AI voice personas configuration",
+          "required": ["enabled", "config_path"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable PersonaPlex voice personas",
+              "default": false
+            },
+            "config_path": {
+              "type": "string",
+              "description": "Path to PersonaPlex personas configuration file",
+              "examples": [".framework/voice/personas.yaml"]
+            }
+          }
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging configuration for diagnostic output and audit trail generation",
+      "required": ["level", "output", "rotation"],
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "type": "string",
+          "description": "Log level for filtering log messages",
+          "enum": ["debug", "info", "warn", "error", "fatal"],
+          "default": "info",
+          "examples": ["info"]
+        },
+        "output": {
+          "type": "string",
+          "description": "Directory path for log files or 'console' for stdout only",
+          "examples": [".framework/logs/", "console"]
+        },
+        "rotation": {
+          "type": "string",
+          "description": "Log rotation strategy",
+          "enum": ["daily", "hourly", "size", "none"],
+          "default": "daily",
+          "examples": ["daily"]
+        }
+      }
+    }
+  },
+  "definitions": {
+    "sdlcPhase": {
+      "type": "object",
+      "description": "Configuration for an SDLC phase",
+      "required": ["enabled", "timeout", "checkpoint_interval"],
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable this SDLC phase",
+          "default": true
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Maximum time in seconds for this phase before auto-termination",
+          "minimum": 0,
+          "examples": [1800, 1200, 3600]
+        },
+        "checkpoint_interval": {
+          "type": "integer",
+          "description": "Interval in seconds for saving state checkpoints",
+          "minimum": 0,
+          "examples": [300, 600]
+        }
+      }
+    },
+    "mcpServerConfig": {
+      "type": "object",
+      "description": "Configuration for an MCP server",
+      "required": ["enabled", "package"],
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable this MCP server",
+          "default": true
+        },
+        "package": {
+          "type": "string",
+          "description": "NPM package name for the MCP server",
+          "examples": ["@kilocode/mcp-codegraph", "@kilocode/mcp-rag-memory"]
+        }
+      }
+    },
+    "modeConfig": {
+      "type": "object",
+      "description": "Configuration for an AI mode",
+      "required": ["enabled", "config"],
+      "additionalProperties": true,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable this mode",
+          "default": true
+        },
+        "config": {
+          "type": "string",
+          "description": "Path to the mode configuration file",
+          "examples": [".framework/modes/orchestrator.yaml"]
+        }
+      }
+    }
+  }
+}
