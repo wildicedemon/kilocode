@@ -59,7 +59,8 @@ Implementation plan created based on `{@artifacts_path}/spec.md`.
 - Integrate the requirements workflow into mode/task routing (likely `src/core/task/Task.ts` and/or prompt selection flow).
 - Add unit tests in `src/services/framework/__tests__/requirements-workflow.spec.ts` for questioning loops, SMART gating, and error conditions.
 
-### [ ] Step: Generate requirements documents with metadata
+### [x] Step: Generate requirements documents with metadata
+<!-- chat-id: 5f6ae2c2-f6e2-43b9-8da4-a0a21ad7c841 -->
 - Implement a writer utility to create `.framework/requirements/{issue-id}-requirements.md` with IEEE 830 sections and metadata front matter.
 - Ensure EARS syntax formatting for functional requirements and explicit acceptance criteria.
 - Add tests for document formatting and metadata serialization in `src/services/framework/__tests__/requirements-doc-writer.spec.ts`.
