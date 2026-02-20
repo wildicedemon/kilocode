@@ -42,7 +42,8 @@ Save to `{@artifacts_path}/spec.md` with:
 - Delivery phases (incremental, testable milestones)
 - Verification approach using project lint/test commands
 
-### [ ] Step: Planning
+### [x] Step: Planning
+<!-- chat-id: 22a68367-fe1d-4dc8-ad9b-9526b63ff1ec -->
 
 Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
 
@@ -58,8 +59,26 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Implementation
+### [ ] Step: Add ntfy MCP registry + settings schema
+- Create/update `.kilo/mcp-servers-registry.json` with `ntfy-me-mcp` entry, command, and env var metadata (mark optional).
+- Update `src/package.json` `contributes.configuration` for `kilo-code.notifications.ntfy.{enabled,topic,server,token}` with defaults.
+- Update `src/package.nls.json` for settings labels/descriptions.
+- If needed, extend `packages/types/src/global-settings.ts` and any settings key lists/defaults to keep types aligned.
+- Verification: `pnpm check-types` (repo root) if settings types change.
 
-This step should be replaced with detailed implementation tasks from the Planning step.
+### [ ] Step: Implement ntfy notification helper + tests
+- Add `src/services/notifications/ntfy-helper.ts` with `sendNtfyNotification` reading settings, guarding on disabled/missing topic, calling `McpHub.callTool`, and handling errors.
+- Add unit tests for guard behavior and MCP invocation (mock settings + `McpHub`).
+- Verification: `cd src && pnpm test path/to/new-test-file`.
 
-If Planning didn't replace this step, execute the tasks in `{@artifacts_path}/plan.md`, updating checkboxes as you go. Run planned tests/lint and record results in plan.md.
+### [ ] Step: Implement ntfy bootstrap + command + tests
+- Add `src/services/notifications/bootstrap.ts` with `setupNtfy()` QuickPick flow, topic suggestion, workspace settings updates, and test notification.
+- Add command ID in `packages/types/src/vscode.ts`, contribute in `src/package.json`, and register in `src/activate/registerCommands.ts`.
+- Add unit tests covering setup flow and configuration updates (mock `vscode` APIs).
+- Verification: `cd src && pnpm test path/to/new-test-file`.
+
+### [ ] Step: Add ntfy notifications documentation
+- Create `.framework/docs/notifications.md` with enablement steps, app setup, topic subscription, workflow examples, and privacy notes.
+
+### [ ] Step: Final verification
+- Run `pnpm lint` and `pnpm check-types` from repo root.
