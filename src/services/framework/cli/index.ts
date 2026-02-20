@@ -245,7 +245,7 @@ class SilentProgressReporter implements ProgressReporter {
 /**
  * Parse command line arguments into structured format
  */
-function parseArgs(argv: string[]): ParsedArgs {
+export function parseArgs(argv: string[]): ParsedArgs {
 	const result: ParsedArgs = {
 		_: [],
 	}
@@ -326,15 +326,15 @@ function parseValue(value: string): string | number | boolean {
  */
 function buildOptions(parsed: ParsedArgs): CLIOptions {
 	return {
-		verbose: Boolean(parsed.verbose || parsed.v),
-		json: Boolean(parsed.json || parsed.j),
-		quiet: Boolean(parsed.quiet || parsed.q),
+		verbose: parsed.verbose === true || parsed.v === true,
+		json: parsed.json === true || parsed.j === true,
+		quiet: parsed.quiet === true || parsed.q === true,
 		color: parsed.color !== false && !parsed["no-color"], // kilocode_change
 		config: typeof parsed.config === "string" ? parsed.config : undefined,
 		cwd: typeof parsed.cwd === "string" ? parsed.cwd : undefined,
-		dryRun: Boolean(parsed["dry-run"] || parsed.d),
-		force: Boolean(parsed.force || parsed.f),
-		nonInteractive: Boolean(parsed["non-interactive"] || parsed.y),
+		dryRun: parsed["dry-run"] === true || parsed.d === true,
+		force: parsed.force === true || parsed.f === true,
+		nonInteractive: parsed["non-interactive"] === true || parsed.y === true,
 		logLevel: (parsed["log-level"] as CLIOptions["logLevel"]) ?? "info",
 	}
 }

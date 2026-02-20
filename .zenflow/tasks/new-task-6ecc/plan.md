@@ -92,7 +92,7 @@ Implementation plan created based on `{@artifacts_path}/spec.md`.
 - Send summary notifications with approval actions and persist approval status in the requirements document metadata.
 - Add unit tests in `src/integrations/notifications/__tests__/ntfy.spec.ts` for request/response handling and approval updates.
 
-### [!] Step: Verification
+### [x] Step: Verification
 
 <!-- chat-id: 5a24a3a7-cbcc-40ab-a059-73199d1ee833 -->
 

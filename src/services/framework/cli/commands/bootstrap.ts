@@ -56,9 +56,7 @@ function parseBootstrapOptions(args: ParsedArgs): BootstrapOptions {
 		skipHealthCheck: Boolean(args["skip-health-check"]),
 		overwrite: Boolean(args.overwrite || args.f),
 		mcpServers:
-			typeof args["mcp-servers"] === "string"
-				? args["mcp-servers"].split(",").map((s) => s.trim())
-				: undefined,
+			typeof args["mcp-servers"] === "string" ? args["mcp-servers"].split(",").map((s) => s.trim()) : undefined,
 	}
 }
 
@@ -183,7 +181,7 @@ async function runHealthChecks(): Promise<HealthCheckResult[]> {
  */
 async function installDependencies(
 	options: BootstrapOptions,
-	verbose: boolean
+	verbose: boolean,
 ): Promise<{ installed: string[]; warnings: string[] }> {
 	const installed: string[] = []
 	const warnings: string[] = []
@@ -225,8 +223,8 @@ async function installDependencies(
 
 		try {
 			const { spawn } = await import("child_process")
+			const pnpmExists = await commandExists("pnpm")
 			await new Promise<void>((resolve, reject) => {
-				const pnpmExists = commandExists("pnpm")
 				const npmCmd = pnpmExists ? "pnpm" : "npm"
 				const child = spawn(npmCmd, ["install"], {
 					cwd,
@@ -244,9 +242,7 @@ async function installDependencies(
 				child.on("error", reject)
 			})
 		} catch (error) {
-			warnings.push(
-				`Failed to install dependencies: ${error instanceof Error ? error.message : String(error)}`
-			)
+			warnings.push(`Failed to install dependencies: ${error instanceof Error ? error.message : String(error)}`)
 		}
 	}
 
@@ -283,7 +279,7 @@ const DEFAULT_MCP_SERVERS = [
  */
 async function configureMcpServers(
 	options: BootstrapOptions,
-	verbose: boolean
+	verbose: boolean,
 ): Promise<{ configured: string[]; warnings: string[] }> {
 	const configured: string[] = []
 	const warnings: string[] = []
@@ -312,7 +308,7 @@ async function configureMcpServers(
 		await fs.mkdir(mcpConfigDir, { recursive: true })
 	} catch (error) {
 		warnings.push(
-			`Failed to create MCP config directory: ${error instanceof Error ? error.message : String(error)}`
+			`Failed to create MCP config directory: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return { configured, warnings }
 	}
@@ -327,7 +323,7 @@ async function configureMcpServers(
 					enabled: s.enabled,
 					package: s.package,
 				},
-			])
+			]),
 		),
 	}
 
@@ -339,9 +335,7 @@ async function configureMcpServers(
 			console.log(`  Configured ${configured.length} MCP servers`)
 		}
 	} catch (error) {
-		warnings.push(
-			`Failed to write MCP config: ${error instanceof Error ? error.message : String(error)}`
-		)
+		warnings.push(`Failed to write MCP config: ${error instanceof Error ? error.message : String(error)}`)
 	}
 
 	return { configured, warnings }
@@ -464,7 +458,7 @@ logging:
  */
 async function generateConfigFiles(
 	options: BootstrapOptions,
-	verbose: boolean
+	verbose: boolean,
 ): Promise<{ generated: string[]; warnings: string[] }> {
 	const generated: string[] = []
 	const warnings: string[] = []
@@ -488,7 +482,7 @@ async function generateConfigFiles(
 		await fs.mkdir(frameworkDir, { recursive: true })
 	} catch (error) {
 		warnings.push(
-			`Failed to create .framework directory: ${error instanceof Error ? error.message : String(error)}`
+			`Failed to create .framework directory: ${error instanceof Error ? error.message : String(error)}`,
 		)
 		return { generated, warnings }
 	}
@@ -511,9 +505,7 @@ async function generateConfigFiles(
 			}
 		}
 	} catch (error) {
-		warnings.push(
-			`Failed to generate config.yaml: ${error instanceof Error ? error.message : String(error)}`
-		)
+		warnings.push(`Failed to generate config.yaml: ${error instanceof Error ? error.message : String(error)}`)
 	}
 
 	// Generate state.json
@@ -545,9 +537,7 @@ async function generateConfigFiles(
 			}
 		}
 	} catch (error) {
-		warnings.push(
-			`Failed to generate state.json: ${error instanceof Error ? error.message : String(error)}`
-		)
+		warnings.push(`Failed to generate state.json: ${error instanceof Error ? error.message : String(error)}`)
 	}
 
 	return { generated, warnings }
