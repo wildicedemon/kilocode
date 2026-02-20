@@ -62,5 +62,9 @@
 	"autocomplete.commands.applyAllSuggestions": "Apply All Suggested Edits",
 
 	"autocomplete.commands.goToNextSuggestion": "Go To Next Suggestion",
-	"autocomplete.commands.goToPreviousSuggestion": "Go To Previous Suggestion"
+	"autocomplete.commands.goToPreviousSuggestion": "Go To Previous Suggestion",
+	"settings.notifications.ntfy.enabled.description": "Enable ntfy push notifications via MCP.",
+	"settings.notifications.ntfy.topic.description": "Topic name for ntfy notifications.",
+	"settings.notifications.ntfy.server.description": "ntfy server URL (defaults to https://ntfy.sh).",
+	"settings.notifications.ntfy.token.description": "Access token for private ntfy topics (optional)."
 }

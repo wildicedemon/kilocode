@@ -59,7 +59,8 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Add ntfy MCP registry + settings schema
+### [x] Step: Add ntfy MCP registry + settings schema
+<!-- chat-id: 658f9527-9164-4467-a04c-f1447542d33b -->
 - Create/update `.kilo/mcp-servers-registry.json` with `ntfy-me-mcp` entry, command, and env var metadata (mark optional).
 - Update `src/package.json` `contributes.configuration` for `kilo-code.notifications.ntfy.{enabled,topic,server,token}` with defaults.
 - Update `src/package.nls.json` for settings labels/descriptions.

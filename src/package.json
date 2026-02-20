@@ -489,6 +489,26 @@
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
+				"kilo-code.notifications.ntfy.enabled": {
+					"type": "boolean",
+					"default": false,
+					"description": "%settings.notifications.ntfy.enabled.description%"
+				},
+				"kilo-code.notifications.ntfy.topic": {
+					"type": "string",
+					"default": "",
+					"description": "%settings.notifications.ntfy.topic.description%"
+				},
+				"kilo-code.notifications.ntfy.server": {
+					"type": "string",
+					"default": "https://ntfy.sh",
+					"description": "%settings.notifications.ntfy.server.description%"
+				},
+				"kilo-code.notifications.ntfy.token": {
+					"type": "string",
+					"default": "",
+					"description": "%settings.notifications.ntfy.token.description%"
+				},
 				"kilo-code.allowedCommands": {
 					"type": "array",
 					"items": {

@@ -1,0 +1,18 @@
+{
+	"ntfy-me-mcp": {
+		"command": "npx ntfy-me-mcp",
+		"optional": true,
+		"env": {
+			"NTFY_TOPIC": {
+				"required": true
+			},
+			"NTFY_URL": {
+				"required": false,
+				"default": "https://ntfy.sh"
+			},
+			"NTFY_TOKEN": {
+				"required": false
+			}
+		}
+	}
+}
