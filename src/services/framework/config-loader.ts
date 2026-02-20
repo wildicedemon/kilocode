@@ -12,10 +12,7 @@
 import * as fs from "fs/promises"
 import * as path from "path"
 import * as yaml from "yaml"
-import type {
-	FrameworkConfig,
-	ConfigLoadOptions,
-} from "./types"
+import type { FrameworkConfig, ConfigLoadOptions } from "./types"
 import { FrameworkConfigError } from "./types"
 
 /**
@@ -142,11 +139,7 @@ const DEFAULT_CONFIG: FrameworkConfig = {
 /**
  * Configuration file search locations in order of priority (highest first)
  */
-const CONFIG_PATHS = [
-	".framework/config.yaml",
-	".framework/config.yml",
-	".framework/config.json",
-]
+const CONFIG_PATHS = [".framework/config.yaml", ".framework/config.yml", ".framework/config.json"]
 
 /**
  * Substitutes environment variables in a string value.
@@ -161,7 +154,8 @@ function substituteEnvVars(value: string): string {
 
 	return value.replace(envVarPattern, (_, varName: string, defaultValue?: string) => {
 		// Access process.env safely
-		const envValue = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[varName]
+		const envValue = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process
+			?.env?.[varName]
 		if (envValue !== undefined && envValue !== "") {
 			return envValue
 		}
@@ -179,7 +173,8 @@ function substituteEnvVars(value: string): string {
  * @param obj - The object to process
  * @returns The object with environment variables substituted
  */
-function substituteEnvVarsDeep<T>(obj: T): T {
+// kilocode_change start
+export function substituteEnvVarsDeep<T>(obj: T): T {
 	if (typeof obj === "string") {
 		return substituteEnvVars(obj) as T
 	}
@@ -206,7 +201,7 @@ function substituteEnvVarsDeep<T>(obj: T): T {
  * @param source - The object to merge into target
  * @returns The merged object
  */
-function deepMerge<T>(target: T, source: Partial<T>): T {
+export function deepMerge<T>(target: T, source: Partial<T>): T {
 	if (target === null || target === undefined) {
 		return source as T
 	}
@@ -247,6 +242,7 @@ function deepMerge<T>(target: T, source: Partial<T>): T {
 
 	return result as T
 }
+// kilocode_change end
 
 /**
  * Validates that a configuration object has all required fields.
@@ -364,10 +360,9 @@ async function validateAgainstSchema(config: FrameworkConfig, workspacePath: str
  * Type guard for ENOENT errors
  */
 function isEnoentError(error: unknown): boolean {
-	return error !== null &&
-		typeof error === "object" &&
-		"code" in error &&
-		(error as { code: string }).code === "ENOENT"
+	return (
+		error !== null && typeof error === "object" && "code" in error && (error as { code: string }).code === "ENOENT"
+	)
 }
 
 /**
@@ -401,20 +396,14 @@ function validateSchemaProperties(
 
 				if (expectedType === "integer") {
 					if (typeof value !== "number" || !Number.isInteger(value)) {
-						throw new FrameworkConfigError(
-							`${currentPath} must be an integer, got ${actualType}`,
-						)
+						throw new FrameworkConfigError(`${currentPath} must be an integer, got ${actualType}`)
 					}
 				} else if (expectedType === "array") {
 					if (!Array.isArray(value)) {
-						throw new FrameworkConfigError(
-							`${currentPath} must be an array, got ${actualType}`,
-						)
+						throw new FrameworkConfigError(`${currentPath} must be an array, got ${actualType}`)
 					}
 				} else if (expectedType !== actualType) {
-					throw new FrameworkConfigError(
-						`${currentPath} must be ${expectedType}, got ${actualType}`,
-					)
+					throw new FrameworkConfigError(`${currentPath} must be ${expectedType}, got ${actualType}`)
 				}
 			}
 
