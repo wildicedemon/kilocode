@@ -47,7 +47,8 @@ Save to `{@artifacts_path}/spec.md` with:
 
 Implementation plan created below.
 
-### [ ] Step: Add Review mode configuration
+### [x] Step: Add Review mode configuration
+<!-- chat-id: f0f587c7-e947-448c-a23f-1b2848efe8c2 -->
 - Add `.framework/modes/review.yaml` with required properties and review-layer guidance aligned with the spec.
 - Register the mode in `.framework/config.yaml` (or the existing mode registry) if required by the loader.
 - Add/update unit tests covering mode loading/validation if available.
