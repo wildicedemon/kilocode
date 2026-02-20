@@ -29,16 +29,13 @@ import type {
 } from "./types"
 import { DEFAULT_BOOTSTRAP_OPTIONS, BootstrapError } from "./types"
 import { runEnvironmentChecks, getEnvironmentCheckSummary } from "./checks/environment"
-import { 
-	installDependencies, 
+import {
+	installDependencies,
 	installWorkspaceDependencies,
 	ALL_DEFAULT_DEPENDENCIES,
 	getDependencyInstallSummary,
 } from "./checks/dependencies"
-import { 
-	validateAllSecrets, 
-	getSecretValidationSummary,
-} from "./checks/secrets"
+import { validateAllSecrets, getSecretValidationSummary } from "./checks/secrets"
 import {
 	generateAllConfigs,
 	generateMcpConfig,
@@ -54,7 +51,7 @@ import {
 
 /**
  * BootstrapService - Orchestrates the bootstrap process
- * 
+ *
  * This service handles the complete bootstrap workflow for setting up
  * the Kilo Framework in a workspace.
  */
@@ -64,14 +61,11 @@ export class BootstrapService {
 	private progressCallback?: BootstrapProgressCallback
 	private workspacePath: string
 
-	constructor(
-		options: Partial<BootstrapOptions> = {},
-		progressCallback?: BootstrapProgressCallback
-	) {
+	constructor(options: Partial<BootstrapOptions> = {}, progressCallback?: BootstrapProgressCallback) {
 		this.options = { ...DEFAULT_BOOTSTRAP_OPTIONS, ...options }
 		this.progressCallback = progressCallback
 		this.workspacePath = this.options.workspacePath ?? this.getCwd()
-		
+
 		this.status = {
 			phase: "idle",
 			progress: 0,
@@ -85,11 +79,13 @@ export class BootstrapService {
 	 * Get the current working directory safely
 	 */
 	private getCwd(): string {
-		const proc = (globalThis as unknown as { 
-			process?: { 
-				cwd?: () => string
-			} 
-		}).process
+		const proc = (
+			globalThis as unknown as {
+				process?: {
+					cwd?: () => string
+				}
+			}
+		).process
 
 		return proc?.cwd?.() ?? "."
 	}
@@ -103,7 +99,7 @@ export class BootstrapService {
 		progress: number,
 		message: string,
 		data?: Record<string, unknown>,
-		error?: Error
+		error?: Error,
 	): void {
 		const event: BootstrapProgressEvent = {
 			type,
@@ -138,12 +134,7 @@ export class BootstrapService {
 	 * Run environment checks
 	 */
 	async checkEnvironment(): Promise<EnvironmentCheck[]> {
-		this.emitProgress(
-			"phase_started",
-			"environment-check",
-			5,
-			"Checking environment prerequisites"
-		)
+		this.emitProgress("phase_started", "environment-check", 5, "Checking environment prerequisites")
 
 		try {
 			const checks = await runEnvironmentChecks()
@@ -154,26 +145,14 @@ export class BootstrapService {
 				"environment-check",
 				15,
 				`Environment checks complete: ${summary.passed} passed, ${summary.failed} failed`,
-				{ checks, summary }
+				{ checks, summary },
 			)
 
 			return checks
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error))
-			this.emitProgress(
-				"bootstrap_error",
-				"environment-check",
-				15,
-				"Environment check failed",
-				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"Environment check failed",
-				"ENV_CHECK_FAILED",
-				err,
-				"environment-check"
-			)
+			this.emitProgress("bootstrap_error", "environment-check", 15, "Environment check failed", undefined, err)
+			throw new BootstrapError("Environment check failed", "ENV_CHECK_FAILED", err, "environment-check")
 		}
 	}
 
@@ -181,12 +160,7 @@ export class BootstrapService {
 	 * Install dependencies
 	 */
 	async installDependencies(): Promise<DependencyInstallResult[]> {
-		this.emitProgress(
-			"phase_started",
-			"dependencies",
-			20,
-			"Installing dependencies"
-		)
+		this.emitProgress("phase_started", "dependencies", 20, "Installing dependencies")
 
 		try {
 			const results: DependencyInstallResult[] = []
@@ -201,26 +175,22 @@ export class BootstrapService {
 					"dependencies",
 					30,
 					`Workspace dependencies: ${workspaceResult.status}`,
-					{ result: workspaceResult }
+					{ result: workspaceResult },
 				)
 
 				// Install additional dependencies
-				const additionalResults = await installDependencies(
-					ALL_DEFAULT_DEPENDENCIES,
-					this.workspacePath,
-					{
-						parallel: false,
-						onProgress: (result) => {
-							this.emitProgress(
-								"dependency_installed",
-								"dependencies",
-								30 + (results.length / ALL_DEFAULT_DEPENDENCIES.length) * 20,
-								`${result.dependency.name}: ${result.status}`,
-								{ result }
-							)
-						},
-					}
-				)
+				const additionalResults = await installDependencies(ALL_DEFAULT_DEPENDENCIES, this.workspacePath, {
+					parallel: false,
+					onProgress: (result) => {
+						this.emitProgress(
+							"dependency_installed",
+							"dependencies",
+							30 + (results.length / ALL_DEFAULT_DEPENDENCIES.length) * 20,
+							`${result.dependency.name}: ${result.status}`,
+							{ result },
+						)
+					},
+				})
 				results.push(...additionalResults)
 			}
 
@@ -231,26 +201,14 @@ export class BootstrapService {
 				"dependencies",
 				50,
 				`Dependencies complete: ${summary.installed} installed, ${summary.failed} failed`,
-				{ results, summary }
+				{ results, summary },
 			)
 
 			return results
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error))
-			this.emitProgress(
-				"bootstrap_error",
-				"dependencies",
-				50,
-				"Dependency installation failed",
-				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"Dependency installation failed",
-				"DEP_INSTALL_FAILED",
-				err,
-				"dependencies"
-			)
+			this.emitProgress("bootstrap_error", "dependencies", 50, "Dependency installation failed", undefined, err)
+			throw new BootstrapError("Dependency installation failed", "DEP_INSTALL_FAILED", err, "dependencies")
 		}
 	}
 
@@ -258,12 +216,7 @@ export class BootstrapService {
 	 * Validate secrets
 	 */
 	async validateSecrets(): Promise<SecretValidationResult[]> {
-		this.emitProgress(
-			"phase_started",
-			"secrets",
-			55,
-			"Validating secrets and API keys"
-		)
+		this.emitProgress("phase_started", "secrets", 55, "Validating secrets and API keys")
 
 		try {
 			const results = validateAllSecrets()
@@ -274,53 +227,32 @@ export class BootstrapService {
 				"secrets",
 				65,
 				`Secrets validation: ${summary.valid} valid, ${summary.missing} missing`,
-				{ results, summary }
+				{ results, summary },
 			)
 
 			return results
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error))
-			this.emitProgress(
-				"bootstrap_error",
-				"secrets",
-				65,
-				"Secret validation failed",
-				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"Secret validation failed",
-				"SECRET_VALIDATION_FAILED",
-				err,
-				"secrets"
-			)
+			this.emitProgress("bootstrap_error", "secrets", 65, "Secret validation failed", undefined, err)
+			throw new BootstrapError("Secret validation failed", "SECRET_VALIDATION_FAILED", err, "secrets")
 		}
 	}
 
 	/**
 	 * Configure MCP servers
 	 */
-	async configureMcpServers(
-		servers?: McpServerConfig[]
-	): Promise<ConfigGenerationResult[]> {
-		this.emitProgress(
-			"phase_started",
-			"mcp-config",
-			70,
-			"Configuring MCP servers"
-		)
+	async configureMcpServers(servers?: McpServerConfig[]): Promise<ConfigGenerationResult[]> {
+		this.emitProgress("phase_started", "mcp-config", 70, "Configuring MCP servers")
 
 		try {
 			const results: ConfigGenerationResult[] = []
 
 			if (!this.options.skipMcp) {
 				const serversToConfigure = servers ?? DEFAULT_MCP_SERVERS
-				
+
 				// Filter to specific servers if requested
 				const filteredServers = this.options.mcpServers
-					? serversToConfigure.filter((s) => 
-							this.options.mcpServers?.includes(s.id)
-						)
+					? serversToConfigure.filter((s) => this.options.mcpServers?.includes(s.id))
 					: serversToConfigure
 
 				// Generate MCP config
@@ -338,26 +270,14 @@ export class BootstrapService {
 				"mcp-config",
 				80,
 				`MCP configuration complete: ${results.filter((r) => r.success).length} configured`,
-				{ results }
+				{ results },
 			)
 
 			return results
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error))
-			this.emitProgress(
-				"bootstrap_error",
-				"mcp-config",
-				80,
-				"MCP configuration failed",
-				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"MCP configuration failed",
-				"MCP_CONFIG_FAILED",
-				err,
-				"mcp-config"
-			)
+			this.emitProgress("bootstrap_error", "mcp-config", 80, "MCP configuration failed", undefined, err)
+			throw new BootstrapError("MCP configuration failed", "MCP_CONFIG_FAILED", err, "mcp-config")
 		}
 	}
 
@@ -365,12 +285,7 @@ export class BootstrapService {
 	 * Generate configuration files
 	 */
 	async generateConfig(): Promise<ConfigGenerationResult[]> {
-		this.emitProgress(
-			"phase_started",
-			"config-generation",
-			85,
-			"Generating configuration files"
-		)
+		this.emitProgress("phase_started", "config-generation", 85, "Generating configuration files")
 
 		try {
 			const results: ConfigGenerationResult[] = []
@@ -396,7 +311,7 @@ export class BootstrapService {
 				"config-generation",
 				95,
 				`Configuration complete: ${summary.generated} generated, ${summary.failed} failed`,
-				{ results, summary }
+				{ results, summary },
 			)
 
 			return results
@@ -408,14 +323,9 @@ export class BootstrapService {
 				95,
 				"Configuration generation failed",
 				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"Configuration generation failed",
-				"CONFIG_GEN_FAILED",
 				err,
-				"config-generation"
 			)
+			throw new BootstrapError("Configuration generation failed", "CONFIG_GEN_FAILED", err, "config-generation")
 		}
 	}
 
@@ -423,12 +333,7 @@ export class BootstrapService {
 	 * Run health checks
 	 */
 	async runHealthChecks(): Promise<HealthCheckResult[]> {
-		this.emitProgress(
-			"phase_started",
-			"health-check",
-			95,
-			"Running health checks"
-		)
+		this.emitProgress("phase_started", "health-check", 95, "Running health checks")
 
 		try {
 			const results: HealthCheckResult[] = []
@@ -436,14 +341,12 @@ export class BootstrapService {
 
 			// Check framework directory
 			try {
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const fs = await import("fs/promises")
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const path = await import("path")
-				
+
 				const frameworkDir = path.join(this.workspacePath, ".framework")
 				await fs.access(frameworkDir)
-				
+
 				results.push({
 					id: "framework-dir",
 					name: "Framework Directory",
@@ -463,14 +366,12 @@ export class BootstrapService {
 
 			// Check config file
 			try {
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const fs = await import("fs/promises")
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const path = await import("path")
-				
+
 				const configPath = path.join(this.workspacePath, ".framework", "config.yaml")
 				await fs.access(configPath)
-				
+
 				results.push({
 					id: "config-file",
 					name: "Configuration File",
@@ -490,14 +391,12 @@ export class BootstrapService {
 
 			// Check node_modules
 			try {
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const fs = await import("fs/promises")
-				// @ts-expect-error - Dynamic import for Node.js built-in module
 				const path = await import("path")
-				
+
 				const nodeModulesPath = path.join(this.workspacePath, "node_modules")
 				await fs.access(nodeModulesPath)
-				
+
 				results.push({
 					id: "node-modules",
 					name: "Dependencies",
@@ -520,26 +419,14 @@ export class BootstrapService {
 				"health-check",
 				100,
 				`Health checks complete: ${results.filter((r) => r.status === "healthy").length} healthy`,
-				{ results }
+				{ results },
 			)
 
 			return results
 		} catch (error) {
 			const err = error instanceof Error ? error : new Error(String(error))
-			this.emitProgress(
-				"bootstrap_error",
-				"health-check",
-				100,
-				"Health checks failed",
-				undefined,
-				err
-			)
-			throw new BootstrapError(
-				"Health checks failed",
-				"HEALTH_CHECK_FAILED",
-				err,
-				"health-check"
-			)
+			this.emitProgress("bootstrap_error", "health-check", 100, "Health checks failed", undefined, err)
+			throw new BootstrapError("Health checks failed", "HEALTH_CHECK_FAILED", err, "health-check")
 		}
 	}
 
@@ -558,43 +445,26 @@ export class BootstrapService {
 		const warnings: string[] = []
 		const errors: string[] = []
 
-		this.emitProgress(
-			"bootstrap_started",
-			"idle",
-			0,
-			"Starting bootstrap process"
-		)
+		this.emitProgress("bootstrap_started", "idle", 0, "Starting bootstrap process")
 
 		try {
 			// 1. Environment checks
-			const environmentChecks = this.options.skipHealthCheck 
-				? [] 
-				: await this.checkEnvironment()
+			const environmentChecks = this.options.skipHealthCheck ? [] : await this.checkEnvironment()
 
 			// 2. Dependencies
-			const dependencies = this.options.skipDependencies 
-				? [] 
-				: await this.installDependencies()
+			const dependencies = this.options.skipDependencies ? [] : await this.installDependencies()
 
 			// 3. Secrets
-			const secrets = this.options.skipSecrets 
-				? [] 
-				: await this.validateSecrets()
+			const secrets = this.options.skipSecrets ? [] : await this.validateSecrets()
 
 			// 4. MCP configuration
-			const mcpServers = this.options.skipMcp 
-				? [] 
-				: await this.configureMcpServers()
+			const mcpServers = this.options.skipMcp ? [] : await this.configureMcpServers()
 
 			// 5. Configuration generation
-			const configFiles = this.options.skipConfig 
-				? [] 
-				: await this.generateConfig()
+			const configFiles = this.options.skipConfig ? [] : await this.generateConfig()
 
 			// 6. Health checks
-			const healthChecks = this.options.skipHealthCheck 
-				? [] 
-				: await this.runHealthChecks()
+			const healthChecks = this.options.skipHealthCheck ? [] : await this.runHealthChecks()
 
 			// Collect warnings
 			const envSummary = getEnvironmentCheckSummary(environmentChecks)
@@ -613,8 +483,7 @@ export class BootstrapService {
 			}
 
 			// Determine success
-			const success = errors.length === 0 && 
-				(envSummary.allRequiredPass || this.options.skipHealthCheck)
+			const success = errors.length === 0 && (envSummary.allRequiredPass || this.options.skipHealthCheck)
 
 			const completedAt = new Date().toISOString()
 			const totalDuration = new Date(completedAt).getTime() - new Date(startedAt).getTime()
@@ -623,9 +492,7 @@ export class BootstrapService {
 				"bootstrap_completed",
 				"complete",
 				100,
-				success 
-					? "Bootstrap completed successfully" 
-					: "Bootstrap completed with errors",
+				success ? "Bootstrap completed successfully" : "Bootstrap completed with errors",
 				{
 					environmentChecks: environmentChecks.length,
 					dependencies: dependencies.length,
@@ -635,7 +502,7 @@ export class BootstrapService {
 					healthChecks: healthChecks.length,
 					warnings: warnings.length,
 					errors: errors.length,
-				}
+				},
 			)
 
 			return {
@@ -676,7 +543,7 @@ export class BootstrapService {
 				this.status.progress,
 				`Bootstrap failed: ${err.message}`,
 				undefined,
-				err
+				err,
 			)
 
 			return {
@@ -706,7 +573,7 @@ export class BootstrapService {
  */
 export async function runBootstrap(
 	options: Partial<BootstrapOptions> = {},
-	progressCallback?: BootstrapProgressCallback
+	progressCallback?: BootstrapProgressCallback,
 ): Promise<BootstrapResult> {
 	const service = new BootstrapService(options, progressCallback)
 	return service.run()

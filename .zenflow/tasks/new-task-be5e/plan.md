@@ -91,7 +91,7 @@ Save to `{@artifacts_path}/plan.md`.
 - If endpoint missing, surface a clear error path (architecture output should request config/approval input)
 - Add/adjust tests covering notification configuration behavior and error handling
 
-### [!] Step: Verification
+### [x] Step: Verification
 
 <!-- chat-id: a5317bc0-d3e6-4dfd-883a-1c608f97d711 -->
 

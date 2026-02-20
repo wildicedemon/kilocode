@@ -242,10 +242,11 @@ class SilentProgressReporter implements ProgressReporter {
 // ARGUMENT PARSER
 // =============================================================================
 
+// kilocode_change start
 /**
  * Parse command line arguments into structured format
  */
-function parseArgs(argv: string[]): ParsedArgs {
+export function parseArgs(argv: string[]): ParsedArgs {
 	const result: ParsedArgs = {
 		_: [],
 	}
@@ -305,6 +306,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 	return result
 }
+// kilocode_change end
 
 /**
  * Parse a string value into appropriate type

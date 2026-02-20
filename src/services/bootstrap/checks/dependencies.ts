@@ -8,12 +8,7 @@
  * and Langfuse SDK.
  */
 
-import type {
-	DependencyConfig,
-	DependencyInstallResult,
-	DependencyStatus,
-	PackageManager,
-} from "../types"
+import type { DependencyConfig, DependencyInstallResult, DependencyStatus, PackageManager } from "../types"
 
 // =============================================================================
 // DEFAULT DEPENDENCIES
@@ -94,10 +89,7 @@ export const DEFAULT_TOOL_DEPENDENCIES: DependencyConfig[] = [
 /**
  * All default dependencies
  */
-export const ALL_DEFAULT_DEPENDENCIES = [
-	...DEFAULT_MCP_DEPENDENCIES,
-	...DEFAULT_TOOL_DEPENDENCIES,
-]
+export const ALL_DEFAULT_DEPENDENCIES = [...DEFAULT_MCP_DEPENDENCIES, ...DEFAULT_TOOL_DEPENDENCIES]
 
 // =============================================================================
 // UTILITY FUNCTIONS
@@ -111,13 +103,15 @@ function getProcessInfo(): {
 	cwd: () => string
 	env: Record<string, string | undefined>
 } {
-	const proc = (globalThis as unknown as { 
-		process?: { 
-			platform?: string
-			cwd?: () => string
-			env?: Record<string, string | undefined>
-		} 
-	}).process
+	const proc = (
+		globalThis as unknown as {
+			process?: {
+				platform?: string
+				cwd?: () => string
+				env?: Record<string, string | undefined>
+			}
+		}
+	).process
 
 	return {
 		platform: proc?.platform ?? "linux",
@@ -130,9 +124,8 @@ function getProcessInfo(): {
  * Detect available package manager
  */
 async function detectPackageManager(): Promise<PackageManager> {
-	// @ts-expect-error - Dynamic import for Node.js built-in module
 	const { spawn } = await import("child_process")
-	
+
 	const checkCommand = (cmd: string): Promise<boolean> => {
 		return new Promise((resolve) => {
 			const child = spawn(cmd, ["--version"], { shell: true })
@@ -153,30 +146,24 @@ async function detectPackageManager(): Promise<PackageManager> {
 function getInstallCommand(
 	packageManager: PackageManager,
 	global: boolean,
-	packageSpec: string
+	packageSpec: string,
 ): { command: string; args: string[] } {
 	switch (packageManager) {
 		case "pnpm":
 			return {
 				command: "pnpm",
-				args: global 
-					? ["add", "-g", packageSpec] 
-					: ["add", packageSpec],
+				args: global ? ["add", "-g", packageSpec] : ["add", packageSpec],
 			}
 		case "yarn":
 			return {
 				command: "yarn",
-				args: global 
-					? ["global", "add", packageSpec] 
-					: ["add", packageSpec],
+				args: global ? ["global", "add", packageSpec] : ["add", packageSpec],
 			}
 		case "npm":
 		default:
 			return {
 				command: "npm",
-				args: global 
-					? ["install", "-g", packageSpec] 
-					: ["install", packageSpec],
+				args: global ? ["install", "-g", packageSpec] : ["install", packageSpec],
 			}
 	}
 }
@@ -184,16 +171,11 @@ function getInstallCommand(
 /**
  * Check if a package is already installed
  */
-async function isPackageInstalled(
-	packageName: string,
-	workspacePath: string
-): Promise<boolean> {
+async function isPackageInstalled(packageName: string, workspacePath: string): Promise<boolean> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
+
 		// Check node_modules
 		const nodeModulesPath = path.join(workspacePath, "node_modules", packageName)
 		try {
@@ -225,23 +207,13 @@ async function isPackageInstalled(
 /**
  * Get installed version of a package
  */
-async function getInstalledVersion(
-	packageName: string,
-	workspacePath: string
-): Promise<string | undefined> {
+async function getInstalledVersion(packageName: string, workspacePath: string): Promise<string | undefined> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
-		const packageJsonPath = path.join(
-			workspacePath,
-			"node_modules",
-			packageName,
-			"package.json"
-		)
-		
+
+		const packageJsonPath = path.join(workspacePath, "node_modules", packageName, "package.json")
+
 		try {
 			const content = await fs.readFile(packageJsonPath, "utf-8")
 			const packageJson = JSON.parse(content)
@@ -263,7 +235,7 @@ async function getInstalledVersion(
  */
 export async function installDependency(
 	dependency: DependencyConfig,
-	workspacePath?: string
+	workspacePath?: string,
 ): Promise<DependencyInstallResult> {
 	const startTime = Date.now()
 	const { cwd } = getProcessInfo()
@@ -284,21 +256,14 @@ export async function installDependency(
 		}
 
 		// Detect package manager
-		const packageManager = dependency.packageManager ?? await detectPackageManager()
-		const packageSpec = dependency.version 
-			? `${dependency.package}@${dependency.version}`
-			: dependency.package
+		const packageManager = dependency.packageManager ?? (await detectPackageManager())
+		const packageSpec = dependency.version ? `${dependency.package}@${dependency.version}` : dependency.package
 
-		const { command, args } = getInstallCommand(
-			packageManager,
-			dependency.global,
-			packageSpec
-		)
+		const { command, args } = getInstallCommand(packageManager, dependency.global, packageSpec)
 
 		// Run install command
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const { spawn } = await import("child_process")
-		
+
 		const installResult = await new Promise<{ success: boolean; error?: string }>((resolve) => {
 			const child = spawn(command, args, {
 				shell: true,
@@ -363,7 +328,7 @@ export async function installDependencies(
 	options?: {
 		parallel?: boolean
 		onProgress?: (result: DependencyInstallResult) => void
-	}
+	},
 ): Promise<DependencyInstallResult[]> {
 	const results: DependencyInstallResult[] = []
 
@@ -376,7 +341,7 @@ export async function installDependencies(
 			}
 			return result
 		})
-		results.push(...await Promise.all(promises))
+		results.push(...(await Promise.all(promises)))
 	} else {
 		// Install sequentially
 		for (const dep of dependencies) {
@@ -396,7 +361,7 @@ export async function installDependencies(
  */
 export async function checkDependencyStatus(
 	dependency: DependencyConfig,
-	workspacePath?: string
+	workspacePath?: string,
 ): Promise<DependencyStatus> {
 	const { cwd } = getProcessInfo()
 	const targetPath = workspacePath ?? cwd()
@@ -455,20 +420,16 @@ export function getDependencyInstallSummary(results: DependencyInstallResult[]):
 /**
  * Install workspace dependencies (npm/pnpm install)
  */
-export async function installWorkspaceDependencies(
-	workspacePath?: string
-): Promise<DependencyInstallResult> {
+export async function installWorkspaceDependencies(workspacePath?: string): Promise<DependencyInstallResult> {
 	const startTime = Date.now()
 	const { cwd } = getProcessInfo()
 	const targetPath = workspacePath ?? cwd()
 
 	try {
 		// Check for package.json
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
+
 		const packageJsonPath = path.join(targetPath, "package.json")
 		try {
 			await fs.access(packageJsonPath)
@@ -511,7 +472,6 @@ export async function installWorkspaceDependencies(
 
 		// Detect and run install
 		const packageManager = await detectPackageManager()
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const { spawn } = await import("child_process")
 
 		const installResult = await new Promise<{ success: boolean; error?: string }>((resolve) => {
