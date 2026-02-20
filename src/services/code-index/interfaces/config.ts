@@ -1,6 +1,20 @@
 import { ApiHandlerOptions } from "../../../shared/api" // Adjust path if needed
 import { EmbedderProvider } from "./manager"
 
+// kilocode_change start
+export enum ParserMode {
+	TREE_SITTER = "tree-sitter",
+	LST = "lst",
+	HYBRID = "hybrid",
+}
+
+export interface LSTOptions {
+	preserveFormatting: boolean
+	includeTypeInfo: boolean
+	captureComments: boolean
+}
+// kilocode_change end
+
 /**
  * Configuration state for the code indexing feature
  */
@@ -8,6 +22,8 @@ export interface CodeIndexConfig {
 	isConfigured: boolean
 	embedderProvider: EmbedderProvider
 	// kilocode_change start
+	parserMode?: ParserMode
+	lstOptions?: LSTOptions
 	vectorStoreProvider?: "lancedb" | "qdrant"
 	lancedbVectorStoreDirectoryPlaceholder?: string
 	// kilocode_change end
@@ -40,6 +56,8 @@ export type PreviousConfigSnapshot = {
 	configured: boolean
 	embedderProvider: EmbedderProvider
 	// kilocode_change start
+	parserMode?: ParserMode
+	lstOptions?: LSTOptions
 	vectorStoreProvider?: "lancedb" | "qdrant"
 	lancedbVectorStoreDirectory?: string
 	// kilocode_change end

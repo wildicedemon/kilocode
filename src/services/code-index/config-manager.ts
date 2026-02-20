@@ -1,9 +1,17 @@
 import { ApiHandlerOptions } from "../../shared/api"
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
-import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
+import { CodeIndexConfig, PreviousConfigSnapshot, ParserMode, LSTOptions } from "./interfaces/config"
 import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
+
+// kilocode_change start
+const DEFAULT_LST_OPTIONS: LSTOptions = {
+	preserveFormatting: true,
+	includeTypeInfo: true,
+	captureComments: true,
+}
+// kilocode_change end
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -13,6 +21,8 @@ export class CodeIndexConfigManager {
 	private codebaseIndexEnabled: boolean = false
 	private embedderProvider: EmbedderProvider = "openai"
 	// kilocode_change - start
+	private parserMode: ParserMode = ParserMode.TREE_SITTER
+	private lstOptions: LSTOptions = DEFAULT_LST_OPTIONS
 	private vectorStoreProvider: "lancedb" | "qdrant" = "qdrant"
 	private lancedbVectorStoreDirectory?: string
 	// kilocode_change - end
@@ -94,6 +104,8 @@ export class CodeIndexConfigManager {
 			codebaseIndexQdrantUrl: "http://localhost:6333",
 			codebaseIndexEmbedderProvider: "openai",
 			// kilocode_change - start
+			codebaseIndexParserMode: "tree-sitter",
+			codebaseIndexLstOptions: DEFAULT_LST_OPTIONS,
 			codebaseIndexVectorStoreProvider: "qdrant",
 			codebaseIndexLancedbVectorStoreDirectory: undefined,
 			// kilocode_change - end
@@ -115,7 +127,11 @@ export class CodeIndexConfigManager {
 			codebaseIndexEmbedderProvider,
 			codebaseIndexEmbedderBaseUrl,
 			codebaseIndexEmbedderModelId,
-			codebaseIndexLancedbVectorStoreDirectory, // kilocode_change
+			// kilocode_change start
+			codebaseIndexParserMode,
+			codebaseIndexLstOptions,
+			codebaseIndexLancedbVectorStoreDirectory,
+			// kilocode_change end
 			codebaseIndexSearchMinScore,
 			codebaseIndexSearchMaxResults,
 			// kilocode_change start
@@ -143,6 +159,11 @@ export class CodeIndexConfigManager {
 		// Update instance variables with configuration
 		this.codebaseIndexEnabled = codebaseIndexEnabled ?? false
 		// kilocode_change - start
+		this.parserMode = (codebaseIndexParserMode ?? "tree-sitter") as ParserMode
+		this.lstOptions = {
+			...DEFAULT_LST_OPTIONS,
+			...codebaseIndexLstOptions,
+		}
 		this.vectorStoreProvider = codebaseIndexVectorStoreProvider ?? "qdrant"
 		this.lancedbVectorStoreDirectory = codebaseIndexLancedbVectorStoreDirectory
 		// kilocode_change - end
@@ -231,6 +252,8 @@ export class CodeIndexConfigManager {
 		currentConfig: {
 			isConfigured: boolean
 			embedderProvider: EmbedderProvider
+			parserMode?: ParserMode
+			lstOptions?: LSTOptions
 			modelId?: string
 			modelDimension?: number
 			openAiOptions?: ApiHandlerOptions
@@ -253,6 +276,8 @@ export class CodeIndexConfigManager {
 			configured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			// kilocode_change - start
+			parserMode: this.parserMode,
+			lstOptions: this.lstOptions,
 			vectorStoreProvider: this.vectorStoreProvider,
 			lancedbVectorStoreDirectory: this.lancedbVectorStoreDirectory,
 			// kilocode_change - end
@@ -287,6 +312,8 @@ export class CodeIndexConfigManager {
 			currentConfig: {
 				isConfigured: this.isConfigured(),
 				embedderProvider: this.embedderProvider,
+				parserMode: this.parserMode,
+				lstOptions: this.lstOptions,
 				modelId: this.modelId,
 				modelDimension: this.modelDimension,
 				openAiOptions: this.openAiOptions,
@@ -407,6 +434,11 @@ export class CodeIndexConfigManager {
 		const prevQdrantUrl = prev?.qdrantUrl ?? ""
 		const prevQdrantApiKey = prev?.qdrantApiKey ?? ""
 		// kilocode_change - start
+		const prevParserMode = prev?.parserMode ?? ParserMode.TREE_SITTER
+		const prevLstOptions = {
+			...DEFAULT_LST_OPTIONS,
+			...(prev?.lstOptions ?? {}),
+		}
 		const prevVectorStoreProvider = prev?.vectorStoreProvider ?? "qdrant"
 		const prevLocalDbPath = prev?.lancedbVectorStoreDirectory ?? ""
 		// kilocode_change - end
@@ -438,6 +470,18 @@ export class CodeIndexConfigManager {
 		}
 
 		// kilocode_change - start
+		if (prevParserMode !== this.parserMode) {
+			return true
+		}
+
+		if (
+			prevLstOptions.preserveFormatting !== this.lstOptions.preserveFormatting ||
+			prevLstOptions.includeTypeInfo !== this.lstOptions.includeTypeInfo ||
+			prevLstOptions.captureComments !== this.lstOptions.captureComments
+		) {
+			return true
+		}
+
 		// Vector store provider change
 		if (prevVectorStoreProvider !== this.vectorStoreProvider) {
 			return true
@@ -564,6 +608,8 @@ export class CodeIndexConfigManager {
 			isConfigured: this.isConfigured(),
 			embedderProvider: this.embedderProvider,
 			// kilocode_change - start
+			parserMode: this.parserMode,
+			lstOptions: this.lstOptions,
 			vectorStoreProvider: this.vectorStoreProvider ?? "qdrant",
 			lancedbVectorStoreDirectoryPlaceholder: this.lancedbVectorStoreDirectory,
 			// kilocode_change - end

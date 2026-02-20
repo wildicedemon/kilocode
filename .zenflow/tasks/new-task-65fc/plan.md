@@ -60,7 +60,8 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 - Validate Node.js options (`rewrite-javascript` package, JVM child process) and supported languages.
 - Record findings in `.framework/notes/lst-integration-research.md`.
 
-### [ ] Step: Add parser mode types and config wiring
+### [x] Step: Add parser mode types and config wiring
+<!-- chat-id: 3d6fa2f0-30e1-4c77-8d3b-c4265487cd70 -->
 - Add `ParserMode` and `LSTOptions` types.
 - Extend code index config interfaces and schemas.
 - Update `CodeIndexConfigManager` to load/store parser mode + LST options.

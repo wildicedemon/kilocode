@@ -101,6 +101,12 @@ describe("CodeIndexConfigManager", () => {
 			expect(result.currentConfig).toEqual({
 				isConfigured: false,
 				embedderProvider: "openai",
+				parserMode: "tree-sitter",
+				lstOptions: {
+					preserveFormatting: true,
+					includeTypeInfo: true,
+					captureComments: true,
+				},
 				modelId: undefined,
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
@@ -110,6 +116,35 @@ describe("CodeIndexConfigManager", () => {
 				searchMinScore: 0.4,
 			})
 			expect(result.requiresRestart).toBe(false)
+		})
+
+		it("should load parser mode and LST options from globalState", async () => {
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-large",
+				codebaseIndexParserMode: "lst",
+				codebaseIndexLstOptions: {
+					preserveFormatting: false,
+					includeTypeInfo: false,
+					captureComments: true,
+				},
+			})
+			setupSecretMocks({
+				codeIndexOpenAiKey: "test-openai-key",
+			})
+
+			const result = await configManager.loadConfiguration()
+
+			expect(result.currentConfig).toMatchObject({
+				parserMode: "lst",
+				lstOptions: {
+					preserveFormatting: false,
+					includeTypeInfo: false,
+					captureComments: true,
+				},
+			})
 		})
 
 		it("should load configuration from globalState and secrets", async () => {
@@ -320,6 +355,34 @@ describe("CodeIndexConfigManager", () => {
 			const result = await configManager.loadConfiguration()
 			expect(result.requiresRestart).toBe(true)
 		})
+
+		// kilocode_change start
+		it("should detect restart requirement when parser mode changes", async () => {
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-large",
+				codebaseIndexParserMode: "tree-sitter",
+			})
+			setupSecretMocks({
+				codeIndexOpenAiKey: "test-openai-key",
+			})
+
+			await configManager.loadConfiguration()
+
+			mockContextProxy.getGlobalState.mockReturnValue({
+				codebaseIndexEnabled: true,
+				codebaseIndexQdrantUrl: "http://qdrant.local",
+				codebaseIndexEmbedderProvider: "openai",
+				codebaseIndexEmbedderModelId: "text-embedding-3-large",
+				codebaseIndexParserMode: "lst",
+			})
+
+			const result = await configManager.loadConfiguration()
+			expect(result.requiresRestart).toBe(true)
+		})
+		// kilocode_change end
 
 		it("should detect restart requirement when vector dimensions change", async () => {
 			// Initial state with text-embedding-3-small (1536D)

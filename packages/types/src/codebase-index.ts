@@ -45,6 +45,14 @@ export const codebaseIndexConfigSchema = z.object({
 		])
 		.optional(),
 	// kilocode_change start
+	codebaseIndexParserMode: z.enum(["tree-sitter", "lst", "hybrid"]).optional(),
+	codebaseIndexLstOptions: z
+		.object({
+			preserveFormatting: z.boolean().optional(),
+			includeTypeInfo: z.boolean().optional(),
+			captureComments: z.boolean().optional(),
+		})
+		.optional(),
 	codebaseIndexVectorStoreProvider: z.enum(["lancedb", "qdrant"]).optional(),
 	codebaseIndexLancedbVectorStoreDirectory: z.string().optional(),
 	// kilocode_change end
