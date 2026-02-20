@@ -42,7 +42,8 @@ Save to `{@artifacts_path}/spec.md` with:
 - Delivery phases (incremental, testable milestones)
 - Verification approach using project lint/test commands
 
-### [ ] Step: Planning
+### [x] Step: Planning
+<!-- chat-id: 6b0e054f-2013-4db1-b585-5534ffddccab -->
 
 Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
 
@@ -58,8 +59,25 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Implementation
+### [ ] Step: Add architect mode definition and framework registration
+- Create `.framework/modes/architect.yaml` matching mode schema and required instructions from [./.zenflow/tasks/new-task-be5e/spec.md](./.zenflow/tasks/new-task-be5e/spec.md)
+- Ensure `customInstructions` includes architecture analysis methodology, design principles, document/ADR specs, task decomposition, approval mechanism, and testing guidance
+- Update `.framework/config.yaml` to register `architect` with `enabled: true` and config path
+- Add/update tests that validate config parsing for new mode if needed
 
-This step should be replaced with detailed implementation tasks from the Planning step.
+### [ ] Step: Update framework types, defaults, and schema
+- Update `src/services/framework/config-loader.ts` `DEFAULT_CONFIG` to include `architect` (add `kilocode_change` markers)
+- Update `src/services/framework/types.ts` `ModesConfig` to include `architect: ModeConfig` (add `kilocode_change` markers)
+- Update `.framework/schema.json` to require `modes.architect` and add property description
+- Extend/adjust tests in `src/services/framework/__tests__/config-loader.spec.ts` (or relevant tests) to cover schema/defaults changes
 
-If Planning didn't replace this step, execute the tasks in `{@artifacts_path}/plan.md`, updating checkboxes as you go. Run planned tests/lint and record results in plan.md.
+### [ ] Step: Implement ntfy approval notification integration
+- Review [./src/integrations/notifications/index.ts](./src/integrations/notifications/index.ts) for existing patterns
+- Add minimal helper or reuse existing notification path to POST to ntfy endpoint without new dependencies
+- If endpoint missing, surface a clear error path (architecture output should request config/approval input)
+- Add/adjust tests covering notification configuration behavior and error handling
+
+### [ ] Step: Verification
+- Run `pnpm test services/framework/__tests__/config-loader.spec.ts` from `src` workspace and record results
+- Run `pnpm lint` from repo root and record results
+- Run `pnpm check-types` from repo root and record results
