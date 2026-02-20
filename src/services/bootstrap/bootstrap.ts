@@ -28,6 +28,10 @@ import type {
 	McpServerConfig,
 } from "./types"
 import { DEFAULT_BOOTSTRAP_OPTIONS, BootstrapError } from "./types"
+import * as vscode from "vscode"
+import { Package } from "../../shared/package"
+import { DockerManager } from "../docker/manager"
+import { QdrantManager } from "../docker/qdrant-manager"
 import { runEnvironmentChecks, getEnvironmentCheckSummary } from "./checks/environment"
 import { 
 	installDependencies, 
@@ -174,6 +178,116 @@ export class BootstrapService {
 				err,
 				"environment-check"
 			)
+		}
+	}
+
+	private async checkQdrantHealth(url: string): Promise<boolean> {
+		const normalizedUrl = url.trim().replace(/\/$/, "")
+		const controller = new AbortController()
+		const timeout = setTimeout(() => controller.abort(), 2000)
+		try {
+			const response = await fetch(`${normalizedUrl}/healthz`, { signal: controller.signal })
+			return response.ok
+		} catch {
+			return false
+		} finally {
+			clearTimeout(timeout)
+		}
+	}
+
+	private async updateQdrantUrlSetting(url: string): Promise<void> {
+		await vscode.workspace
+			.getConfiguration(Package.name)
+			.update("codeIndex.qdrantUrl", url, vscode.ConfigurationTarget.Workspace)
+	}
+
+	private getQdrantDataPathSetting(): string | undefined {
+		const configuredPath = vscode.workspace
+			.getConfiguration(Package.name)
+			.get<string>("docker.qdrantDataPath")
+			?.trim()
+		return configuredPath ? configuredPath : undefined
+	}
+
+	private async ensureQdrantConfigured(): Promise<string | undefined> {
+		const configuration = vscode.workspace.getConfiguration(Package.name)
+		const configuredUrl = configuration.get<string>("codeIndex.qdrantUrl")?.trim()
+		if (configuredUrl && (await this.checkQdrantHealth(configuredUrl))) {
+			return undefined
+		}
+
+		const localUrl = "http://localhost:6333"
+		if (await this.checkQdrantHealth(localUrl)) {
+			await this.updateQdrantUrlSetting(localUrl)
+			return undefined
+		}
+
+		const selection = await vscode.window.showQuickPick(
+			[
+				{ label: "Start local Qdrant", value: "start-local" },
+				{ label: "Configure cloud Qdrant URL", value: "configure-cloud" },
+				{ label: "Skip for now", value: "skip" },
+			],
+			{
+				placeHolder: "Qdrant is not available. Choose how to continue.",
+			},
+		)
+
+		if (!selection || selection.value === "skip") {
+			return "Qdrant setup skipped"
+		}
+
+		if (selection.value === "configure-cloud") {
+			const cloudUrl = await vscode.window.showInputBox({
+				prompt: "Enter your Qdrant URL",
+				value: configuredUrl ?? "",
+				validateInput: (value) => {
+					if (!value.trim()) {
+						return "Qdrant URL is required"
+					}
+					try {
+						new URL(value)
+						return undefined
+					} catch {
+						return "Enter a valid URL"
+					}
+				},
+			})
+			if (!cloudUrl) {
+				return "Qdrant setup skipped"
+			}
+			await this.updateQdrantUrlSetting(cloudUrl.trim())
+			return undefined
+		}
+
+		const dockerManager = new DockerManager()
+		const dockerInstalled = await dockerManager.checkDockerInstalled()
+		if (!dockerInstalled) {
+			await dockerManager.offerInstallation()
+			return "Docker is not installed"
+		}
+
+		const dockerRunning = await dockerManager.isDockerRunning()
+		if (!dockerRunning) {
+			vscode.window.showWarningMessage("Docker is installed but the daemon is not running.")
+			return "Docker daemon is not running"
+		}
+
+		const dataPath = this.getQdrantDataPathSetting()
+		const qdrantManager = new QdrantManager({
+			dataPath,
+			workspacePath: this.workspacePath,
+		})
+
+		try {
+			await qdrantManager.start()
+			await qdrantManager.waitForHealthy()
+			await this.updateQdrantUrlSetting(localUrl)
+			return undefined
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			vscode.window.showErrorMessage(`Failed to start Qdrant: ${message}`)
+			return "Failed to start local Qdrant"
 		}
 	}
 
@@ -570,6 +684,11 @@ export class BootstrapService {
 			const environmentChecks = this.options.skipHealthCheck 
 				? [] 
 				: await this.checkEnvironment()
+
+			const qdrantWarning = await this.ensureQdrantConfigured()
+			if (qdrantWarning) {
+				warnings.push(qdrantWarning)
+			}
 
 			// 2. Dependencies
 			const dependencies = this.options.skipDependencies 

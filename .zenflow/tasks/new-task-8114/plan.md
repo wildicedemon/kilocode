@@ -66,7 +66,8 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 - Register commands (`kilo.docker.startQdrant`, `kilo.docker.stopQdrant`, `kilo.docker.viewQdrantLogs`).
 - Add unit tests for command routing/status bar updates.
 
-### [ ] Step: Bootstrap + settings integration
+### [x] Step: Bootstrap + settings integration
+<!-- chat-id: 9ef97a6e-4326-4ce2-9b12-1e1555ddb136 -->
 - Add new settings, command titles, and localized strings.
 - Update `CodeIndexConfigManager` auto-detection of local Qdrant URL.
 - Extend bootstrap flow to offer Docker start / cloud config / skip.

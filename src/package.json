@@ -594,6 +594,21 @@
 					"maximum": 200,
 					"description": "%settings.codeIndex.embeddingBatchSize.description%"
 				},
+				"kilo-code.codeIndex.qdrantUrl": {
+					"type": "string",
+					"default": "",
+					"description": "%settings.codeIndex.qdrantUrl.description%"
+				},
+				"kilo-code.docker.autoStart": {
+					"type": "boolean",
+					"default": false,
+					"description": "%settings.docker.autoStart.description%"
+				},
+				"kilo-code.docker.qdrantDataPath": {
+					"type": "string",
+					"default": "",
+					"description": "%settings.docker.qdrantDataPath.description%"
+				},
 				"kilo-code.toolProtocol": {
 					"type": "string",
 					"enum": [

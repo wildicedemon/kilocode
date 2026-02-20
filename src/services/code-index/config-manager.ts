@@ -1,9 +1,18 @@
 import { ApiHandlerOptions } from "../../shared/api"
+import * as vscode from "vscode" // kilocode_change
 import { ContextProxy } from "../../core/config/ContextProxy"
 import { EmbedderProvider } from "./interfaces/manager"
 import { CodeIndexConfig, PreviousConfigSnapshot } from "./interfaces/config"
 import { DEFAULT_SEARCH_MIN_SCORE, DEFAULT_MAX_SEARCH_RESULTS } from "./constants"
 import { getDefaultModelId, getModelDimension, getModelScoreThreshold } from "../../shared/embeddingModels"
+import { Package } from "../../shared/package" // kilocode_change
+
+// kilocode_change start
+type QdrantDetectionOptions = {
+	getWorkspaceQdrantUrl?: () => string | undefined
+	isLocalQdrantAvailable?: () => Promise<boolean>
+}
+// kilocode_change end
 
 /**
  * Manages configuration state and validation for the code indexing feature.
@@ -27,8 +36,12 @@ export class CodeIndexConfigManager {
 	private bedrockOptions?: { region: string; profile?: string }
 	private openRouterOptions?: { apiKey: string; specificProvider?: string }
 	private voyageOptions?: { apiKey: string } // kilocode_change
-	private qdrantUrl?: string = "http://localhost:6333"
+	private qdrantUrl?: string
 	private qdrantApiKey?: string
+	// kilocode_change start
+	private readonly getWorkspaceQdrantUrl: () => string | undefined
+	private readonly isLocalQdrantAvailable: () => Promise<boolean>
+	// kilocode_change end
 	private searchMinScore?: number
 	private searchMaxResults?: number
 	// kilocode_change start
@@ -44,7 +57,16 @@ export class CodeIndexConfigManager {
 	} | null = null
 	// kilocode_change end
 
-	constructor(private readonly contextProxy: ContextProxy) {
+	constructor(
+		private readonly contextProxy: ContextProxy,
+		options: QdrantDetectionOptions = {},
+	) {
+		// kilocode_change start
+		this.getWorkspaceQdrantUrl =
+			options.getWorkspaceQdrantUrl ??
+			(() => vscode.workspace.getConfiguration(Package.name).get<string>("codeIndex.qdrantUrl") ?? undefined)
+		this.isLocalQdrantAvailable = options.isLocalQdrantAvailable ?? (() => this.checkLocalQdrantAvailability())
+		// kilocode_change end
 		// Initialize with current configuration to avoid false restart triggers
 		this._loadAndSetConfiguration()
 	}
@@ -91,7 +113,7 @@ export class CodeIndexConfigManager {
 		// Load configuration from storage
 		const codebaseIndexConfig = this.contextProxy?.getGlobalState("codebaseIndexConfig") ?? {
 			codebaseIndexEnabled: false,
-			codebaseIndexQdrantUrl: "http://localhost:6333",
+			codebaseIndexQdrantUrl: "",
 			codebaseIndexEmbedderProvider: "openai",
 			// kilocode_change - start
 			codebaseIndexVectorStoreProvider: "qdrant",
@@ -223,6 +245,34 @@ export class CodeIndexConfigManager {
 		this.voyageOptions = voyageApiKey ? { apiKey: voyageApiKey } : undefined // kilocode_change
 	}
 
+	// kilocode_change start
+	private async resolveQdrantUrl(explicitUrl?: string): Promise<string | undefined> {
+		const trimmedExplicit = explicitUrl?.trim()
+		if (trimmedExplicit) {
+			return trimmedExplicit
+		}
+		const workspaceUrl = this.getWorkspaceQdrantUrl()?.trim()
+		if (workspaceUrl) {
+			return workspaceUrl
+		}
+		const localAvailable = await this.isLocalQdrantAvailable()
+		return localAvailable ? "http://localhost:6333" : undefined
+	}
+
+	private async checkLocalQdrantAvailability(): Promise<boolean> {
+		const controller = new AbortController()
+		const timeout = setTimeout(() => controller.abort(), 1500)
+		try {
+			const response = await fetch("http://localhost:6333/healthz", { signal: controller.signal })
+			return response.ok
+		} catch {
+			return false
+		} finally {
+			clearTimeout(timeout)
+		}
+	}
+	// kilocode_change end
+
 	/**
 	 * Loads persisted configuration from globalState.
 	 */
@@ -279,6 +329,9 @@ export class CodeIndexConfigManager {
 
 		// Load new configuration from storage and update instance variables
 		this._loadAndSetConfiguration()
+		// kilocode_change start
+		this.qdrantUrl = await this.resolveQdrantUrl(this.qdrantUrl)
+		// kilocode_change end
 
 		const requiresRestart = this.doesConfigChangeRequireRestart(previousConfigSnapshot)
 

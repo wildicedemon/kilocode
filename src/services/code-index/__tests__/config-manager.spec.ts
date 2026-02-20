@@ -20,6 +20,16 @@ const mockedGetModelScoreThreshold = vi.mocked(getModelScoreThreshold)
 describe("CodeIndexConfigManager", () => {
 	let mockContextProxy: any
 	let configManager: CodeIndexConfigManager
+	const createConfigManager = (options?: {
+		getWorkspaceQdrantUrl?: () => string | undefined
+		isLocalQdrantAvailable?: () => Promise<boolean>
+	}) => {
+		const defaultOptions = {
+			getWorkspaceQdrantUrl: () => undefined,
+			isLocalQdrantAvailable: async () => false,
+		}
+		return new CodeIndexConfigManager(mockContextProxy, { ...defaultOptions, ...options })
+	}
 
 	beforeEach(() => {
 		// Reset mocks
@@ -33,7 +43,7 @@ describe("CodeIndexConfigManager", () => {
 			updateGlobalState: vi.fn(),
 		}
 
-		configManager = new CodeIndexConfigManager(mockContextProxy)
+		configManager = createConfigManager()
 	})
 
 	// Helper function to setup secret mocking
@@ -66,7 +76,7 @@ describe("CodeIndexConfigManager", () => {
 			mockContextProxy.getSecret.mockReturnValue(undefined)
 
 			// Re-create instance to load the configuration
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isFeatureEnabled).toBe(false)
 		})
 
@@ -77,7 +87,7 @@ describe("CodeIndexConfigManager", () => {
 			mockContextProxy.getSecret.mockReturnValue(undefined)
 
 			// Re-create instance to load the configuration
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isFeatureEnabled).toBe(true)
 		})
 
@@ -86,7 +96,7 @@ describe("CodeIndexConfigManager", () => {
 			mockContextProxy.getSecret.mockReturnValue(undefined)
 
 			// Re-create instance to load the configuration
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isFeatureEnabled).toBe(false)
 		})
 	})
@@ -105,11 +115,37 @@ describe("CodeIndexConfigManager", () => {
 				openAiOptions: { openAiNativeApiKey: "" },
 				ollamaOptions: { ollamaBaseUrl: "" },
 				bedrockOptions: { region: "us-east-1", profile: undefined },
-				qdrantUrl: "http://localhost:6333",
+				qdrantUrl: undefined,
 				qdrantApiKey: "",
 				searchMinScore: 0.4,
 			})
 			expect(result.requiresRestart).toBe(false)
+		})
+
+		it("should use workspace Qdrant URL when no global state value exists", async () => {
+			mockContextProxy.getGlobalState.mockReturnValue({ codebaseIndexEnabled: true })
+			mockContextProxy.getSecret.mockReturnValue(undefined)
+
+			configManager = createConfigManager({
+				getWorkspaceQdrantUrl: () => "http://workspace-qdrant.local",
+			})
+
+			const result = await configManager.loadConfiguration()
+
+			expect(result.currentConfig.qdrantUrl).toBe("http://workspace-qdrant.local")
+		})
+
+		it("should auto-detect local Qdrant when available", async () => {
+			mockContextProxy.getGlobalState.mockReturnValue({ codebaseIndexEnabled: true })
+			mockContextProxy.getSecret.mockReturnValue(undefined)
+
+			configManager = createConfigManager({
+				isLocalQdrantAvailable: async () => true,
+			})
+
+			const result = await configManager.loadConfiguration()
+
+			expect(result.currentConfig.qdrantUrl).toBe("http://localhost:6333")
 		})
 
 		it("should load configuration from globalState and secrets", async () => {
@@ -1398,7 +1434,7 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexQdrantUrl: "http://localhost:6333",
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			// Get the initial snapshot
 			const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
@@ -1431,7 +1467,7 @@ describe("CodeIndexConfigManager", () => {
 				if (key === "codeIndexOpenAiKey") return "test-key"
 				return undefined
 			})
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			const previousSnapshot: PreviousConfigSnapshot = {
 				enabled: true,
@@ -1469,7 +1505,7 @@ describe("CodeIndexConfigManager", () => {
 				if (key === "codeIndexOpenAiKey") return "test-key"
 				return undefined
 			})
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			// Get initial configuration
 			const { configSnapshot: previousSnapshot } = await configManager.loadConfiguration()
@@ -1486,7 +1522,7 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexEnabled: false,
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			const previousSnapshot: PreviousConfigSnapshot = {
 				enabled: false,
@@ -1508,7 +1544,7 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexQdrantUrl: "http://localhost:6333",
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			const previousSnapshot: PreviousConfigSnapshot = {
 				enabled: true,
@@ -1529,7 +1565,7 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexEmbedderProvider: "ollama",
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			const previousSnapshot: PreviousConfigSnapshot = {
 				enabled: false,
@@ -1588,7 +1624,7 @@ describe("CodeIndexConfigManager", () => {
 				codebaseIndexQdrantUrl: "http://localhost:6333",
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 
 			// Get initial state
 			await configManager.loadConfiguration()
@@ -1621,7 +1657,7 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			const config = configManager.getConfig()
 
 			expect(config).toHaveProperty("isConfigured")
@@ -1642,7 +1678,7 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isConfigured()).toBe(true)
 		})
 
@@ -1654,7 +1690,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isConfigured()).toBe(false)
 		})
 
@@ -1667,7 +1703,7 @@ describe("CodeIndexConfigManager", () => {
 			})
 			mockContextProxy.getSecret.mockReturnValue(undefined)
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isConfigured()).toBe(true)
 		})
 
@@ -1681,7 +1717,7 @@ describe("CodeIndexConfigManager", () => {
 				return undefined
 			})
 
-			configManager = new CodeIndexConfigManager(mockContextProxy)
+			configManager = createConfigManager()
 			expect(configManager.isConfigured()).toBe(false)
 		})
 
@@ -1706,7 +1742,7 @@ describe("CodeIndexConfigManager", () => {
 					return undefined
 				})
 
-				configManager = new CodeIndexConfigManager(mockContextProxy)
+				configManager = createConfigManager()
 				await configManager.loadConfiguration()
 
 				// Should return model's built-in dimension, not custom
@@ -1730,7 +1766,7 @@ describe("CodeIndexConfigManager", () => {
 					return undefined
 				})
 
-				configManager = new CodeIndexConfigManager(mockContextProxy)
+				configManager = createConfigManager()
 				await configManager.loadConfiguration()
 
 				// Should use custom dimension as fallback
@@ -1754,7 +1790,7 @@ describe("CodeIndexConfigManager", () => {
 					return undefined
 				})
 
-				configManager = new CodeIndexConfigManager(mockContextProxy)
+				configManager = createConfigManager()
 				await configManager.loadConfiguration()
 
 				// Should return undefined
@@ -1778,7 +1814,7 @@ describe("CodeIndexConfigManager", () => {
 					return undefined
 				})
 
-				configManager = new CodeIndexConfigManager(mockContextProxy)
+				configManager = createConfigManager()
 				await configManager.loadConfiguration()
 
 				// Should use default model ID
@@ -1803,7 +1839,7 @@ describe("CodeIndexConfigManager", () => {
 					return undefined
 				})
 
-				configManager = new CodeIndexConfigManager(mockContextProxy)
+				configManager = createConfigManager()
 				await configManager.loadConfiguration()
 
 				// Should return undefined since custom dimension is invalid
@@ -1835,7 +1871,7 @@ describe("CodeIndexConfigManager", () => {
 						return undefined
 					})
 
-					configManager = new CodeIndexConfigManager(mockContextProxy)
+					configManager = createConfigManager()
 					await configManager.loadConfiguration()
 
 					// Should correctly return the built-in dimension for the Mistral model
