@@ -20,7 +20,8 @@ If you are blocked and need user clarification, mark the current step with `[!]`
 
 ## Workflow Steps
 
-### [ ] Step: Technical Specification
+### [x] Step: Technical Specification
+<!-- chat-id: 95e92bf5-09a2-4445-be3e-c35579919c0d -->
 
 Assess the task's difficulty, as underestimating it leads to poor outcomes.
 - easy: Straightforward implementation, trivial bug fix or feature
@@ -54,16 +55,22 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Implementation
+### [ ] Step: Docker and Qdrant services
+- Implement `DockerManager` and `QdrantManager` (new `src/services/docker/*` files).
+- Add unit tests for Docker detection, container lifecycle, and health polling.
 
-Implement the task according to the technical specification and general engineering best practices.
+### [ ] Step: VS Code command + status bar integration
+- Add status bar item + quick pick actions.
+- Register commands (`kilo.docker.startQdrant`, `kilo.docker.stopQdrant`, `kilo.docker.viewQdrantLogs`).
+- Add unit tests for command routing/status bar updates.
 
-1. Break the task into steps where possible.
-2. Implement the required changes in the codebase
-3. If relevant, write unit tests alongside each change.
-4. Run relevant tests and linters in the end of each step.
-5. Perform basic manual verification if applicable.
-6. After completion, write a report to `{@artifacts_path}/report.md` describing:
-   - What was implemented
-   - How the solution was tested
-   - The biggest issues or challenges encountered
+### [ ] Step: Bootstrap + settings integration
+- Add new settings, command titles, and localized strings.
+- Update `CodeIndexConfigManager` auto-detection of local Qdrant URL.
+- Extend bootstrap flow to offer Docker start / cloud config / skip.
+- Add unit tests for config changes and bootstrap decision paths.
+
+### [ ] Step: Verification and reporting
+- Run `pnpm lint`, `pnpm check-types`, and relevant `pnpm test` targets (from `src/`).
+- Perform manual smoke checks for Docker missing/daemon stopped/port conflict.
+- Write report to `{@artifacts_path}/report.md` with implementation + testing summary.
