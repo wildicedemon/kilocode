@@ -10,10 +10,33 @@ import { MAX_BLOCK_CHARS, MIN_BLOCK_CHARS, MIN_CHUNK_REMAINDER_CHARS, MAX_CHARS_
 import { TelemetryService } from "@roo-code/telemetry"
 import { TelemetryEventName } from "@roo-code/types"
 import { sanitizeErrorMessage } from "../shared/validation-helpers"
+import { LSTOptions } from "../interfaces/config"
 
-/**
- * Implementation of the code parser interface
- */
+type LstLanguage = "java" | "javascript" | "typescript"
+
+type LstNode = {
+	type: string
+	text: string
+	startLine: number
+	endLine: number
+	identifier?: string | null
+	name?: string | null
+	typeInfo?: string | null
+	children?: LstNode[]
+}
+
+type LstParseResult =
+	| {
+			nodes?: LstNode[]
+			lst?: { nodes?: LstNode[] }
+			tree?: { nodes?: LstNode[] }
+	  }
+	| LstNode[]
+
+type LstParser = {
+	parse: (content: string, options: LSTOptions) => Promise<LstParseResult> | LstParseResult
+}
+
 export class CodeParser implements ICodeParser {
 	private loadedParsers: LanguageParser = {}
 	private pendingLoads: Map<string, Promise<LanguageParser>> = new Map()
@@ -33,15 +56,12 @@ export class CodeParser implements ICodeParser {
 			fileHash?: string
 		},
 	): Promise<CodeBlock[]> {
-		// Get file extension
 		const ext = path.extname(filePath).toLowerCase()
 
-		// Skip if not a supported language
 		if (!this.isSupportedLanguage(ext)) {
 			return []
 		}
 
-		// Get file content
 		let content: string
 		let fileHash: string
 
@@ -63,8 +83,85 @@ export class CodeParser implements ICodeParser {
 			}
 		}
 
-		// Parse the file
 		return this.parseContent(filePath, content, fileHash)
+	}
+
+	async parseWithLST(
+		filePath: string,
+		options?: {
+			content?: string
+			fileHash?: string
+			lstOptions?: LSTOptions
+		},
+	): Promise<CodeBlock[]> {
+		const ext = path.extname(filePath).toLowerCase()
+
+		if (!this.isSupportedLanguage(ext)) {
+			return []
+		}
+
+		let content: string
+		let fileHash: string
+
+		if (options?.content) {
+			content = options.content
+			fileHash = options.fileHash || this.createFileHash(content)
+		} else {
+			try {
+				content = await readFile(filePath, "utf8")
+				fileHash = this.createFileHash(content)
+			} catch (error) {
+				console.error(`Error reading file ${filePath}:`, error)
+				TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+					error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+					stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
+					location: "parseWithLST",
+				})
+				return []
+			}
+		}
+
+		const lstLanguage = this.getLstLanguage(ext)
+		if (!lstLanguage) {
+			return this.parseContent(filePath, content, fileHash)
+		}
+
+		const lstParser = await this.loadLstParser(lstLanguage)
+		if (!lstParser) {
+			return this.parseContent(filePath, content, fileHash)
+		}
+
+		const resolvedLstOptions: LSTOptions = {
+			preserveFormatting: true,
+			includeTypeInfo: true,
+			captureComments: true,
+			...(options?.lstOptions ?? {}),
+		}
+
+		let lstResult: LstParseResult | undefined
+		try {
+			lstResult = await lstParser.parse(content, resolvedLstOptions)
+		} catch (error) {
+			console.error(`Error parsing LST for ${filePath}:`, error)
+			TelemetryService.instance.captureEvent(TelemetryEventName.CODE_INDEX_ERROR, {
+				error: sanitizeErrorMessage(error instanceof Error ? error.message : String(error)),
+				stack: error instanceof Error ? sanitizeErrorMessage(error.stack || "") : undefined,
+				location: "parseWithLST:parse",
+			})
+			return this.parseContent(filePath, content, fileHash)
+		}
+
+		const lstNodes = this.extractLstNodes(lstResult)
+		if (lstNodes.length === 0) {
+			return this.parseContent(filePath, content, fileHash)
+		}
+
+		const blocks = this.normalizeLstNodes(filePath, lstNodes, fileHash, resolvedLstOptions)
+		if (blocks.length === 0) {
+			return this.parseContent(filePath, content, fileHash)
+		}
+
+		return blocks
 	}
 
 	/**
@@ -74,6 +171,164 @@ export class CodeParser implements ICodeParser {
 	 */
 	private isSupportedLanguage(extension: string): boolean {
 		return scannerExtensions.includes(extension)
+	}
+
+	private getLstLanguage(extension: string): LstLanguage | null {
+		switch (extension) {
+			case ".js":
+			case ".jsx":
+			case ".mjs":
+			case ".cjs":
+				return "javascript"
+			case ".ts":
+			case ".tsx":
+				return "typescript"
+			case ".java":
+				return "java"
+			default:
+				return null
+		}
+	}
+
+	private async loadLstParser(language: LstLanguage): Promise<LstParser | null> {
+		const moduleName = {
+			java: "rewrite-java",
+			javascript: "rewrite-javascript",
+			typescript: "rewrite-javascript",
+		}[language]
+
+		if (!moduleName) {
+			return null
+		}
+
+		let parserModule: any
+		try {
+			parserModule = await import(moduleName)
+		} catch {
+			return null
+		}
+
+		const candidate =
+			parserModule?.parse ??
+			parserModule?.default?.parse ??
+			parserModule?.parser?.parse ??
+			parserModule?.parser
+
+		if (typeof candidate === "function") {
+			return { parse: candidate }
+		}
+
+		if (candidate?.parse && typeof candidate.parse === "function") {
+			return candidate
+		}
+
+		return null
+	}
+
+	private extractLstNodes(result?: LstParseResult): LstNode[] {
+		if (!result) {
+			return []
+		}
+
+		if (Array.isArray(result)) {
+			return result
+		}
+
+		if (Array.isArray(result.nodes)) {
+			return result.nodes
+		}
+
+		if (Array.isArray(result.lst?.nodes)) {
+			return result.lst.nodes
+		}
+
+		if (Array.isArray(result.tree?.nodes)) {
+			return result.tree.nodes
+		}
+
+		return []
+	}
+
+	private normalizeLstNodes(
+		filePath: string,
+		nodes: LstNode[],
+		fileHash: string,
+		options: LSTOptions,
+	): CodeBlock[] {
+		const results: CodeBlock[] = []
+		const seenSegmentHashes = new Set<string>()
+		const queue = [...nodes]
+
+		while (queue.length > 0) {
+			const currentNode = queue.shift()!
+			const rawContent = currentNode.text ?? ""
+
+			if (!rawContent) {
+				continue
+			}
+
+			if (!options.captureComments && currentNode.type.toLowerCase().includes("comment")) {
+				continue
+			}
+
+			const normalizedContent = options.preserveFormatting ? rawContent : rawContent.trim()
+			const identifier = currentNode.identifier ?? currentNode.name ?? null
+			const startLine = currentNode.startLine
+			const endLine = currentNode.endLine
+			const type = options.includeTypeInfo && currentNode.typeInfo
+				? `${currentNode.type}:${currentNode.typeInfo}`
+				: currentNode.type
+
+			if (normalizedContent.length < MIN_BLOCK_CHARS) {
+				if (currentNode.children?.length) {
+					queue.push(...currentNode.children)
+				}
+				continue
+			}
+
+			if (normalizedContent.length > MAX_BLOCK_CHARS * MAX_CHARS_TOLERANCE_FACTOR) {
+				if (currentNode.children?.length) {
+					queue.push(...currentNode.children)
+					continue
+				}
+				const chunks = this._chunkTextByLines(
+					normalizedContent.split("\n"),
+					filePath,
+					fileHash,
+					type,
+					seenSegmentHashes,
+					startLine,
+				)
+				if (identifier) {
+					chunks.forEach((chunk) => {
+						chunk.identifier = identifier
+					})
+				}
+				results.push(...chunks)
+				continue
+			}
+
+			const contentPreview = normalizedContent.slice(0, 100)
+			const segmentHash = createHash("sha256")
+				.update(`${filePath}-${startLine}-${endLine}-${normalizedContent.length}-${contentPreview}`)
+				.digest("hex")
+
+			if (!seenSegmentHashes.has(segmentHash)) {
+				seenSegmentHashes.add(segmentHash)
+				results.push({
+					file_path: filePath,
+					identifier,
+					type,
+					start_line: startLine,
+					end_line: endLine,
+					content: normalizedContent,
+					segmentHash,
+					fileHash,
+				})
+			}
+		}
+
+		return results
 	}
 
 	/**

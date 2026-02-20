@@ -67,7 +67,8 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 - Update `CodeIndexConfigManager` to load/store parser mode + LST options.
 - Add unit tests for config loading and restart detection if needed.
 
-### [ ] Step: Implement LST parser and normalization
+### [x] Step: Implement LST parser and normalization
+<!-- chat-id: 552b1e18-6efc-4481-a560-4294eb4a7b02 -->
 - Implement `parseWithLST` with language routing and fallback to Tree-sitter.
 - Normalize LST output to `CodeBlock` format (include type metadata when available).
 - Add tests for parser selection and fallback behavior.

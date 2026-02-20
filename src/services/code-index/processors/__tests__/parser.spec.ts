@@ -128,6 +128,64 @@ describe("CodeParser", () => {
 		})
 	})
 
+	describe("parseWithLST", () => {
+		it("should fall back to tree-sitter for unsupported LST languages", async () => {
+			const content = "x".repeat(120)
+			const fallbackBlock = {
+				file_path: "test.py",
+				identifier: null,
+				type: "fallback",
+				start_line: 1,
+				end_line: 1,
+				content,
+				segmentHash: "segment",
+				fileHash: "filehash",
+			}
+			const parseContentSpy = vi
+				.spyOn(parser as any, "parseContent")
+				.mockResolvedValue([fallbackBlock])
+
+			const result = await parser.parseWithLST("test.py", { content })
+
+			expect(parseContentSpy).toHaveBeenCalled()
+			expect(result).toEqual([fallbackBlock])
+		})
+
+		it("should normalize LST nodes with type info", async () => {
+			const lstContent = "class Example { constructor() { this.value = 42 } }"
+			const lstNode = {
+				type: "class_declaration",
+				text: `  ${lstContent}  `,
+				startLine: 1,
+				endLine: 3,
+				identifier: "Example",
+				typeInfo: "ExampleType",
+			}
+			const lstParser = {
+				parse: vi.fn().mockResolvedValue({ nodes: [lstNode] }),
+			}
+			const loadLstParserSpy = vi
+				.spyOn(parser as any, "loadLstParser")
+				.mockResolvedValue(lstParser)
+			const parseContentSpy = vi.spyOn(parser as any, "parseContent")
+
+			const result = await parser.parseWithLST("test.ts", {
+				content: lstContent,
+				lstOptions: {
+					preserveFormatting: false,
+					includeTypeInfo: true,
+					captureComments: true,
+				},
+			})
+
+			expect(loadLstParserSpy).toHaveBeenCalled()
+			expect(parseContentSpy).not.toHaveBeenCalled()
+			expect(result[0].type).toBe("class_declaration:ExampleType")
+			expect(result[0].identifier).toBe("Example")
+			expect(result[0].content).toBe(lstContent)
+		})
+	})
+
 	describe("isSupportedLanguage", () => {
 		it("should return true for supported extensions", () => {
 			expect(parser["isSupportedLanguage"](".js")).toBe(true)
