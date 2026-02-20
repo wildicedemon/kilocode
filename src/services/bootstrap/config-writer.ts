@@ -8,11 +8,7 @@
  * directory structure, and default configuration files.
  */
 
-import type {
-	ConfigGenerationOptions,
-	ConfigGenerationResult,
-	McpServerConfig,
-} from "./types"
+import type { ConfigGenerationOptions, ConfigGenerationResult, McpServerConfig } from "./types"
 
 // =============================================================================
 // DEFAULT CONFIGURATIONS
@@ -165,7 +161,7 @@ export const DEFAULT_MCP_CONFIG = {
 				enabled: s.enabled,
 				package: s.package,
 			},
-		])
+		]),
 	),
 }
 
@@ -194,11 +190,13 @@ export const DEFAULT_FRAMEWORK_STATE = {
  * Get the current working directory safely
  */
 function getCwd(): string {
-	const proc = (globalThis as unknown as { 
-		process?: { 
-			cwd?: () => string
-		} 
-	}).process
+	const proc = (
+		globalThis as unknown as {
+			process?: {
+				cwd?: () => string
+			}
+		}
+	).process
 
 	return proc?.cwd?.() ?? "."
 }
@@ -207,7 +205,6 @@ function getCwd(): string {
  * Ensure a directory exists
  */
 async function ensureDir(dirPath: string): Promise<void> {
-	// @ts-expect-error - Dynamic import for Node.js built-in module
 	const fs = await import("fs/promises")
 	await fs.mkdir(dirPath, { recursive: true })
 }
@@ -217,7 +214,6 @@ async function ensureDir(dirPath: string): Promise<void> {
  */
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
 		await fs.access(filePath)
 		return true
@@ -232,7 +228,7 @@ async function fileExists(filePath: string): Promise<boolean> {
 async function writeFile(
 	filePath: string,
 	content: string,
-	overwrite: boolean
+	overwrite: boolean,
 ): Promise<{ written: boolean; reason?: string }> {
 	try {
 		const exists = await fileExists(filePath)
@@ -240,14 +236,13 @@ async function writeFile(
 			return { written: false, reason: "File already exists" }
 		}
 
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
 		await fs.writeFile(filePath, content, "utf-8")
 		return { written: true }
 	} catch (error) {
-		return { 
-			written: false, 
-			reason: error instanceof Error ? error.message : String(error) 
+		return {
+			written: false,
+			reason: error instanceof Error ? error.message : String(error),
 		}
 	}
 }
@@ -261,22 +256,21 @@ async function writeFile(
  */
 export async function generateMcpConfig(
 	workspacePath: string,
-	options: ConfigGenerationOptions
+	options: ConfigGenerationOptions,
 ): Promise<ConfigGenerationResult> {
 	const startTime = Date.now()
-	
+
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
+
 		const mcpDir = path.join(workspacePath, ".kilocode", "mcp")
 		await ensureDir(mcpDir)
 
 		const configPath = path.join(mcpDir, "servers.json")
 		const content = JSON.stringify(DEFAULT_MCP_CONFIG, null, 2)
-		
+
 		const result = await writeFile(configPath, content, options.overwrite)
-		
+
 		return {
 			path: configPath,
 			success: result.written,
@@ -298,14 +292,13 @@ export async function generateMcpConfig(
  */
 export async function generateFrameworkDir(
 	workspacePath: string,
-	options: ConfigGenerationOptions
+	options: ConfigGenerationOptions,
 ): Promise<ConfigGenerationResult[]> {
 	const results: ConfigGenerationResult[] = []
-	
+
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
+
 		const frameworkDir = path.join(workspacePath, ".framework")
 		await ensureDir(frameworkDir)
 
@@ -317,11 +310,7 @@ export async function generateFrameworkDir(
 
 		// Generate config.yaml
 		const configPath = path.join(frameworkDir, "config.yaml")
-		const configResult = await writeFile(
-			configPath,
-			DEFAULT_FRAMEWORK_CONFIG,
-			options.overwrite
-		)
+		const configResult = await writeFile(configPath, DEFAULT_FRAMEWORK_CONFIG, options.overwrite)
 		results.push({
 			path: configPath,
 			success: configResult.written,
@@ -334,7 +323,7 @@ export async function generateFrameworkDir(
 		const stateResult = await writeFile(
 			statePath,
 			JSON.stringify(DEFAULT_FRAMEWORK_STATE, null, 2),
-			false // Never overwrite state
+			false, // Never overwrite state
 		)
 		results.push({
 			path: statePath,
@@ -358,13 +347,10 @@ export async function generateFrameworkDir(
 /**
  * Generate logging directory
  */
-export async function generateLoggingDir(
-	workspacePath: string
-): Promise<ConfigGenerationResult> {
+export async function generateLoggingDir(workspacePath: string): Promise<ConfigGenerationResult> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		
+
 		const logsDir = path.join(workspacePath, ".framework", "logs")
 		await ensureDir(logsDir)
 
@@ -372,7 +358,6 @@ export async function generateLoggingDir(
 		const gitkeepPath = path.join(logsDir, ".gitkeep")
 		const exists = await fileExists(gitkeepPath)
 		if (!exists) {
-			// @ts-expect-error - Dynamic import for Node.js built-in module
 			const fs = await import("fs/promises")
 			await fs.writeFile(gitkeepPath, "", "utf-8")
 		}
@@ -397,7 +382,7 @@ export async function generateLoggingDir(
  */
 export async function generateAllConfigs(
 	options: ConfigGenerationOptions,
-	workspacePath?: string
+	workspacePath?: string,
 ): Promise<ConfigGenerationResult[]> {
 	const results: ConfigGenerationResult[] = []
 	const targetPath = workspacePath ?? getCwd()
@@ -471,17 +456,13 @@ export const GITIGNORE_ENTRIES = [
 /**
  * Update .gitignore with framework entries
  */
-export async function updateGitignore(
-	workspacePath: string
-): Promise<ConfigGenerationResult> {
+export async function updateGitignore(workspacePath: string): Promise<ConfigGenerationResult> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const path = await import("path")
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
-		
+
 		const gitignorePath = path.join(workspacePath, ".gitignore")
-		
+
 		let existingContent = ""
 		try {
 			existingContent = await fs.readFile(gitignorePath, "utf-8")

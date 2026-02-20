@@ -8,10 +8,7 @@
  * and Kilo Code extension checks.
  */
 
-import type {
-	EnvironmentCheck,
-	EnvironmentCheckConfig,
-} from "../types"
+import type { EnvironmentCheck, EnvironmentCheckConfig } from "../types"
 import { DEFAULT_ENVIRONMENT_CHECK_CONFIG } from "../types"
 
 // =============================================================================
@@ -29,14 +26,16 @@ function getProcessInfo(): {
 	env: Record<string, string | undefined>
 } {
 	// Use globalThis to safely access process in both contexts
-	const proc = (globalThis as unknown as { 
-		process?: { 
-			platform?: string
-			versions?: { node?: string }
-			cwd?: () => string
-			env?: Record<string, string | undefined>
-		} 
-	}).process
+	const proc = (
+		globalThis as unknown as {
+			process?: {
+				platform?: string
+				versions?: { node?: string }
+				cwd?: () => string
+				env?: Record<string, string | undefined>
+			}
+		}
+	).process
 
 	return {
 		platform: proc?.platform ?? "linux",
@@ -54,7 +53,6 @@ async function commandExists(command: string): Promise<boolean> {
 		const { platform } = getProcessInfo()
 		const checkCmd = platform === "win32" ? "where" : "which"
 
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const { spawn } = await import("child_process")
 		return new Promise((resolve) => {
 			const child = spawn(checkCmd, [command], { shell: true })
@@ -69,11 +67,13 @@ async function commandExists(command: string): Promise<boolean> {
 /**
  * Execute a command and return its output
  */
-async function executeCommand(command: string, args: string[] = []): Promise<{ stdout: string; stderr: string; code: number }> {
+async function executeCommand(
+	command: string,
+	args: string[] = [],
+): Promise<{ stdout: string; stderr: string; code: number }> {
 	try {
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const { spawn } = await import("child_process")
-		
+
 		return new Promise((resolve) => {
 			const child = spawn(command, args, { shell: true })
 			let stdout = ""
@@ -104,7 +104,10 @@ async function executeCommand(command: string, args: string[] = []): Promise<{ s
  * Parse version string into comparable parts
  */
 function parseVersion(version: string): number[] {
-	const parts = version.replace(/[^\d.]/g, "").split(".").map(Number)
+	const parts = version
+		.replace(/[^\d.]/g, "")
+		.split(".")
+		.map(Number)
 	return parts.length > 0 ? parts : [0]
 }
 
@@ -417,7 +420,6 @@ async function checkWorkspaceAccess(): Promise<EnvironmentCheck> {
 
 	try {
 		const workspacePath = env.WORKSPACE_PATH ?? cwd()
-		// @ts-expect-error - Dynamic import for Node.js built-in module
 		const fs = await import("fs/promises")
 		const stats = await fs.stat(workspacePath)
 
@@ -449,9 +451,7 @@ async function checkWorkspaceAccess(): Promise<EnvironmentCheck> {
 /**
  * Run all environment checks
  */
-export async function runEnvironmentChecks(
-	config: Partial<EnvironmentCheckConfig> = {}
-): Promise<EnvironmentCheck[]> {
+export async function runEnvironmentChecks(config: Partial<EnvironmentCheckConfig> = {}): Promise<EnvironmentCheck[]> {
 	const fullConfig: EnvironmentCheckConfig = {
 		...DEFAULT_ENVIRONMENT_CHECK_CONFIG,
 		...config,

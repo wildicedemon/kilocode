@@ -7,14 +7,7 @@
  * operations, including argument parsing, command routing, and error handling.
  */
 
-import type {
-	Command,
-	CLIOptions,
-	ParsedArgs,
-	CommandResult,
-	OutputFormatter,
-	ProgressReporter,
-} from "./types"
+import type { Command, CLIOptions, ParsedArgs, CommandResult, OutputFormatter, ProgressReporter } from "./types"
 import {
 	DEFAULT_CLI_OPTIONS,
 	CLIError,
@@ -103,9 +96,7 @@ class TextFormatter implements OutputFormatter {
 
 		const headerLine = headers.map((h, i) => h.padEnd(colWidths[i])).join("  ")
 		const separator = colWidths.map((w) => "─".repeat(w)).join("  ")
-		const rowLines = rows.map((row) =>
-			row.map((cell, i) => (cell ?? "").padEnd(colWidths[i])).join("  ")
-		)
+		const rowLines = rows.map((row) => row.map((cell, i) => (cell ?? "").padEnd(colWidths[i])).join("  "))
 
 		return [
 			this.color(headerLine, 1), // bold
@@ -133,7 +124,7 @@ class JsonFormatter implements OutputFormatter {
 				duration: result.duration,
 			},
 			null,
-			2
+			2,
 		)
 	}
 
@@ -148,7 +139,7 @@ class JsonFormatter implements OutputFormatter {
 				},
 			},
 			null,
-			2
+			2,
 		)
 	}
 
@@ -338,7 +329,7 @@ function buildOptions(parsed: ParsedArgs): CLIOptions {
 		verbose: Boolean(parsed.verbose || parsed.v),
 		json: Boolean(parsed.json || parsed.j),
 		quiet: Boolean(parsed.quiet || parsed.q),
-		color: parsed.color !== false && !Boolean(parsed["no-color"]),
+		color: parsed.color !== false && !parsed["no-color"],
 		config: typeof parsed.config === "string" ? parsed.config : undefined,
 		cwd: typeof parsed.cwd === "string" ? parsed.cwd : undefined,
 		dryRun: Boolean(parsed["dry-run"] || parsed.d),
@@ -364,9 +355,7 @@ export class FrameworkCLI {
 
 	constructor(options: Partial<CLIOptions> = {}) {
 		this.options = { ...DEFAULT_CLI_OPTIONS, ...options }
-		this.formatter = this.options.json
-			? new JsonFormatter()
-			: new TextFormatter(this.options.color)
+		this.formatter = this.options.json ? new JsonFormatter() : new TextFormatter(this.options.color)
 		this.progressReporter = this.options.quiet
 			? new SilentProgressReporter()
 			: new ConsoleProgressReporter(this.options.color)
@@ -419,9 +408,7 @@ export class FrameworkCLI {
 			this.options = { ...this.options, ...buildOptions(parsed) }
 
 			// Update formatter based on options
-			this.formatter = this.options.json
-				? new JsonFormatter()
-				: new TextFormatter(this.options.color)
+			this.formatter = this.options.json ? new JsonFormatter() : new TextFormatter(this.options.color)
 			this.progressReporter = this.options.quiet
 				? new SilentProgressReporter()
 				: new ConsoleProgressReporter(this.options.color)
@@ -458,11 +445,7 @@ export class FrameworkCLI {
 	/**
 	 * Execute a command
 	 */
-	private async executeCommand(
-		commandName: string,
-		args: ParsedArgs,
-		options: CLIOptions
-	): Promise<number> {
+	private async executeCommand(commandName: string, args: ParsedArgs, options: CLIOptions): Promise<number> {
 		const command = this.getCommand(commandName)
 
 		if (!command) {
@@ -573,14 +556,7 @@ export async function main(argv: string[] = getProcessArgv()): Promise<number> {
 // TYPE EXPORTS
 // =============================================================================
 
-export type {
-	Command,
-	CLIOptions,
-	ParsedArgs,
-	CommandResult,
-	OutputFormatter,
-	ProgressReporter,
-} from "./types"
+export type { Command, CLIOptions, ParsedArgs, CommandResult, OutputFormatter, ProgressReporter } from "./types"
 
 export {
 	DEFAULT_CLI_OPTIONS,

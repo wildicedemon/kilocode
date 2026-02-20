@@ -1,6 +1,7 @@
 # Full SDD workflow
 
 ## Configuration
+
 - **Artifacts Path**: {@artifacts_path} → `.zenflow/tasks/{task_id}`
 
 ---
@@ -14,6 +15,7 @@ If you are blocked and need user clarification, mark the current step with `[!]`
 ## Workflow Steps
 
 ### [x] Step: Requirements
+
 <!-- chat-id: 1ab46945-c11b-4bd6-888a-81c23227fce3 -->
 
 Create a Product Requirements Document (PRD) based on the feature description.
@@ -27,6 +29,7 @@ Create a Product Requirements Document (PRD) based on the feature description.
 Save the PRD to `{@artifacts_path}/requirements.md`.
 
 ### [x] Step: Technical Specification
+
 <!-- chat-id: 9c9524bd-f377-4a3a-97cb-9e3620bc886e -->
 
 Create a technical specification based on the PRD in `{@artifacts_path}/requirements.md`.
@@ -35,6 +38,7 @@ Create a technical specification based on the PRD in `{@artifacts_path}/requirem
 2. Define the implementation approach
 
 Save to `{@artifacts_path}/spec.md` with:
+
 - Technical context (language, dependencies)
 - Implementation approach referencing existing code patterns
 - Source code structure changes
@@ -43,6 +47,7 @@ Save to `{@artifacts_path}/spec.md` with:
 - Verification approach using project lint/test commands
 
 ### [x] Step: Planning
+
 <!-- chat-id: 22a68367-fe1d-4dc8-ad9b-9526b63ff1ec -->
 
 Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
@@ -60,26 +65,40 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 Save to `{@artifacts_path}/plan.md`.
 
 ### [x] Step: Add ntfy MCP registry + settings schema
+
 <!-- chat-id: 658f9527-9164-4467-a04c-f1447542d33b -->
+
 - Create/update `.kilo/mcp-servers-registry.json` with `ntfy-me-mcp` entry, command, and env var metadata (mark optional).
 - Update `src/package.json` `contributes.configuration` for `kilo-code.notifications.ntfy.{enabled,topic,server,token}` with defaults.
 - Update `src/package.nls.json` for settings labels/descriptions.
 - If needed, extend `packages/types/src/global-settings.ts` and any settings key lists/defaults to keep types aligned.
 - Verification: `pnpm check-types` (repo root) if settings types change.
 
-### [ ] Step: Implement ntfy notification helper + tests
+### [x] Step: Implement ntfy notification helper + tests
+
+<!-- chat-id: d040d086-c2f3-4802-8786-a8dfeb923311 -->
+
 - Add `src/services/notifications/ntfy-helper.ts` with `sendNtfyNotification` reading settings, guarding on disabled/missing topic, calling `McpHub.callTool`, and handling errors.
 - Add unit tests for guard behavior and MCP invocation (mock settings + `McpHub`).
 - Verification: `cd src && pnpm test path/to/new-test-file`.
 
-### [ ] Step: Implement ntfy bootstrap + command + tests
+### [x] Step: Implement ntfy bootstrap + command + tests
+
+<!-- chat-id: 3a33bbd5-0229-4b4f-994e-e492cbbf0cee -->
+
 - Add `src/services/notifications/bootstrap.ts` with `setupNtfy()` QuickPick flow, topic suggestion, workspace settings updates, and test notification.
 - Add command ID in `packages/types/src/vscode.ts`, contribute in `src/package.json`, and register in `src/activate/registerCommands.ts`.
 - Add unit tests covering setup flow and configuration updates (mock `vscode` APIs).
 - Verification: `cd src && pnpm test path/to/new-test-file`.
 
-### [ ] Step: Add ntfy notifications documentation
+### [x] Step: Add ntfy notifications documentation
+
+<!-- chat-id: 6b464093-437a-44af-b2cc-fff7b6d45503 -->
+
 - Create `.framework/docs/notifications.md` with enablement steps, app setup, topic subscription, workflow examples, and privacy notes.
 
-### [ ] Step: Final verification
+### [x] Step: Final verification
+
+<!-- chat-id: 43cb2de5-5fd5-4eb1-95dd-86f67b556f0b -->
+
 - Run `pnpm lint` and `pnpm check-types` from repo root.

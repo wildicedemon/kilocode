@@ -139,6 +139,11 @@
 				"category": "%configuration.title%"
 			},
 			{
+				"command": "kilo-code.setupNtfyNotifications",
+				"title": "%command.setupNtfyNotifications.title%",
+				"category": "%configuration.title%"
+			},
+			{
 				"command": "kilo-code.exportSettings",
 				"title": "Export Settings",
 				"category": "%configuration.title%"

@@ -9,6 +9,7 @@ import { ClineProvider } from "../core/webview/ClineProvider"
 import { exportSettings } from "../core/config/importExport" // kilocode_change
 import { ContextProxy } from "../core/config/ContextProxy"
 import { focusPanel } from "../utils/focusPanel"
+import { setupNtfy } from "../services/notifications/bootstrap" // kilocode_change
 
 import { registerHumanRelayCallback, unregisterHumanRelayCallback, handleHumanRelayResponse } from "./humanRelay"
 import { handleNewTask } from "./handleTask"
@@ -220,6 +221,11 @@ const getCommandsMap = ({ context, outputChannel }: RegisterCommandOptions): Rec
 			filePath,
 		)
 	},
+	// kilocode_change start
+	setupNtfyNotifications: async () => {
+		await setupNtfy()
+	},
+	// kilocode_change end
 	focusPanel: async () => {
 		try {
 			await focusPanel(tabPanel, sidebarPanel)

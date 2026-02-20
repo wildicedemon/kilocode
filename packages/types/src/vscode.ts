@@ -52,6 +52,7 @@ export const commandIds = [
 
 	"setCustomStoragePath",
 	"importSettings",
+	"setupNtfyNotifications", // kilocode_change
 
 	// "focusInput", // kilocode_change
 	"acceptInput",
