@@ -55,7 +55,8 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Research OpenRewrite integration
+### [x] Step: Research OpenRewrite integration
+<!-- chat-id: 5c93a54e-fe60-429d-abb2-76d2ea145185 -->
 - Validate Node.js options (`rewrite-javascript` package, JVM child process) and supported languages.
 - Record findings in `.framework/notes/lst-integration-research.md`.
 
