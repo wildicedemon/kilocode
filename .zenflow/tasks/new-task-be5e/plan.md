@@ -59,7 +59,8 @@ If the feature is trivial and doesn't warrant full specification, update this wo
 
 Save to `{@artifacts_path}/plan.md`.
 
-### [ ] Step: Add architect mode definition and framework registration
+### [x] Step: Add architect mode definition and framework registration
+<!-- chat-id: 60eace26-3ddd-4048-8d84-cb367fd3d85d -->
 - Create `.framework/modes/architect.yaml` matching mode schema and required instructions from [./.zenflow/tasks/new-task-be5e/spec.md](./.zenflow/tasks/new-task-be5e/spec.md)
 - Ensure `customInstructions` includes architecture analysis methodology, design principles, document/ADR specs, task decomposition, approval mechanism, and testing guidance
 - Update `.framework/config.yaml` to register `architect` with `enabled: true` and config path

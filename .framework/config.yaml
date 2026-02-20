@@ -139,6 +139,9 @@ modes:
   requirements:
     enabled: true
     config: ".framework/modes/requirements.yaml"
+  architect:
+    enabled: true
+    config: ".framework/modes/architect.yaml"
   scanner:
     enabled: true
     config: ".framework/modes/scanner.yaml"
