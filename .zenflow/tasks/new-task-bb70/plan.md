@@ -42,24 +42,38 @@ Save to `{@artifacts_path}/spec.md` with:
 - Delivery phases (incremental, testable milestones)
 - Verification approach using project lint/test commands
 
-### [ ] Step: Planning
+### [x] Step: Planning
+<!-- chat-id: ec268694-fde7-41b1-a38c-ba79ad8c9ded -->
 
-Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
+Implementation plan created below.
 
-1. Break down the work into concrete tasks
-2. Each task should reference relevant contracts and include verification steps
-3. Replace the Implementation step below with the planned tasks
+### [ ] Step: Add Review mode configuration
+- Add `.framework/modes/review.yaml` with required properties and review-layer guidance aligned with the spec.
+- Register the mode in `.framework/config.yaml` (or the existing mode registry) if required by the loader.
+- Add/update unit tests covering mode loading/validation if available.
+- Verification: run targeted tests for mode config parsing/loading.
 
-Rule of thumb for step size: each step should represent a coherent unit of work (e.g., implement a component, add an API endpoint). Avoid steps that are too granular (single function) or too broad (entire feature).
+### [ ] Step: Implement review orchestration pipeline
+- Create/extend the review runner under `src/` using existing orchestrator/service patterns.
+- Implement layered checks: requirements traceability, architecture compliance, code quality, testing coverage, and security review.
+- Integrate `codebase_search`, scanner findings, and requirements/architecture artifacts.
+- Add unit tests with mocked services to verify layer sequencing and outputs.
+- Verification: run relevant unit tests for the review pipeline.
 
-Important: unit tests must be part of each implementation task, not separate tasks. Each task should implement the code and its tests together, if relevant.
+### [ ] Step: Implement multi-model consensus and report generation
+- Add consensus helper to call three configured LLM providers and aggregate verdicts.
+- Implement orchestrator decision path for split verdicts with rationale capture.
+- Add report writer to generate `.framework/reviews/{issue-id}-review.md` with all required sections and consensus details.
+- Add unit tests for consensus logic and report formatting.
+- Verification: run unit tests covering consensus/report generation.
 
-If the feature is trivial and doesn't warrant full specification, update this workflow to remove unnecessary steps and explain the reasoning to the user.
+### [ ] Step: Integrate automated testing, linting, and notifications
+- Run `pnpm test`, `pnpm lint`, and `pnpm check-types` from the review workflow and capture results.
+- Enforce fail-fast behavior when tests/lint/type checks fail, and include details in the report.
+- Send ntfy notifications with status, issue counts, and action prompt; handle conditional pass and auto-merge gating.
+- Add unit tests for notification payloads and failure handling.
+- Verification: run relevant unit tests for notifications and automation hooks.
 
-Save to `{@artifacts_path}/plan.md`.
-
-### [ ] Step: Implementation
-
-This step should be replaced with detailed implementation tasks from the Planning step.
-
-If Planning didn't replace this step, execute the tasks in `{@artifacts_path}/plan.md`, updating checkboxes as you go. Run planned tests/lint and record results in plan.md.
+### [ ] Step: Workspace verification
+- Run `pnpm lint`, `pnpm check-types`, and `pnpm test` from the repo root.
+- Manually execute Review mode on a sample issue to validate report and notification output.
