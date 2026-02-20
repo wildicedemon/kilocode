@@ -320,7 +320,7 @@
     "modes": {
       "type": "object",
       "description": "AI mode configurations for specialized personas",
-      "required": ["orchestrator", "requirements", "scanner", "review"],
+      "required": ["orchestrator", "requirements", "architect", "scanner", "review"],
       "additionalProperties": {
         "$ref": "#/definitions/modeConfig"
       },
@@ -332,6 +332,10 @@
         "requirements": {
           "$ref": "#/definitions/modeConfig",
           "description": "Requirements analysis and specification mode"
+        },
+        "architect": {
+          "$ref": "#/definitions/modeConfig",
+          "description": "Solution architecture and design mode"
         },
         "scanner": {
           "$ref": "#/definitions/modeConfig",

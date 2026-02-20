@@ -66,7 +66,8 @@ Save to `{@artifacts_path}/plan.md`.
 - Update `.framework/config.yaml` to register `architect` with `enabled: true` and config path
 - Add/update tests that validate config parsing for new mode if needed
 
-### [ ] Step: Update framework types, defaults, and schema
+### [x] Step: Update framework types, defaults, and schema
+<!-- chat-id: e14573e4-ed69-4432-a9ab-32e30091d763 -->
 - Update `src/services/framework/config-loader.ts` `DEFAULT_CONFIG` to include `architect` (add `kilocode_change` markers)
 - Update `src/services/framework/types.ts` `ModesConfig` to include `architect: ModeConfig` (add `kilocode_change` markers)
 - Update `.framework/schema.json` to require `modes.architect` and add property description

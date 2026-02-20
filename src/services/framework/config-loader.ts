@@ -110,6 +110,12 @@ const DEFAULT_CONFIG: FrameworkConfig = {
 			enabled: true,
 			config: ".framework/modes/requirements.yaml",
 		},
+		// kilocode_change start
+		architect: {
+			enabled: true,
+			config: ".framework/modes/architect.yaml",
+		},
+		// kilocode_change end
 		scanner: {
 			enabled: true,
 			config: ".framework/modes/scanner.yaml",

@@ -54,6 +54,10 @@ describe('config-loader', () => {
       });
       expect(config.sdlc.research.enabled).toBe(true);
       expect(config.scanner.enabled).toBe(true);
+      // kilocode_change start
+      expect(config.modes.architect.enabled).toBe(true);
+      expect(config.modes.architect.config).toBe('.framework/modes/architect.yaml');
+      // kilocode_change end
     });
   });
 

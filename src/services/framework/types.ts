@@ -248,6 +248,10 @@ export interface ModesConfig {
 	orchestrator: ModeConfig
 	/** Requirements analysis and specification mode */
 	requirements: ModeConfig
+	// kilocode_change start
+	/** Solution architecture and design mode */
+	architect: ModeConfig
+	// kilocode_change end
 	/** Deep codebase analysis mode */
 	scanner: ModeConfig
 	/** Code review and quality assurance mode */
