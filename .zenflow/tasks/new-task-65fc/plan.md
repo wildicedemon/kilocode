@@ -20,7 +20,8 @@ If you are blocked and need user clarification, mark the current step with `[!]`
 
 ## Workflow Steps
 
-### [ ] Step: Technical Specification
+### [x] Step: Technical Specification
+<!-- chat-id: 2c6ca925-05d3-4bbd-90b2-47c04478dd21 -->
 
 Assess the task's difficulty, as underestimating it leads to poor outcomes.
 - easy: Straightforward implementation, trivial bug fix or feature
@@ -54,16 +55,36 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Implementation
+### [ ] Step: Research OpenRewrite integration
+- Validate Node.js options (`rewrite-javascript` package, JVM child process) and supported languages.
+- Record findings in `.framework/notes/lst-integration-research.md`.
 
-Implement the task according to the technical specification and general engineering best practices.
+### [ ] Step: Add parser mode types and config wiring
+- Add `ParserMode` and `LSTOptions` types.
+- Extend code index config interfaces and schemas.
+- Update `CodeIndexConfigManager` to load/store parser mode + LST options.
+- Add unit tests for config loading and restart detection if needed.
 
-1. Break the task into steps where possible.
-2. Implement the required changes in the codebase
-3. If relevant, write unit tests alongside each change.
-4. Run relevant tests and linters in the end of each step.
-5. Perform basic manual verification if applicable.
-6. After completion, write a report to `{@artifacts_path}/report.md` describing:
-   - What was implemented
-   - How the solution was tested
-   - The biggest issues or challenges encountered
+### [ ] Step: Implement LST parser and normalization
+- Implement `parseWithLST` with language routing and fallback to Tree-sitter.
+- Normalize LST output to `CodeBlock` format (include type metadata when available).
+- Add tests for parser selection and fallback behavior.
+
+### [ ] Step: Update indexing workflow to honor parser mode
+- Wire configured parser into `CodeIndexServiceFactory`, `DirectoryScanner`, and `FileWatcher`.
+- Add parser mode indicator to index metadata/state.
+- Add tests covering parser mode propagation.
+
+### [ ] Step: Add VS Code settings and localization
+- Add `kilo.codeIndex.parserMode` and `kilo.codeIndex.lstOptions` to `src/package.json`.
+- Update `src/package.nls.json` and translation files as required.
+
+### [ ] Step: Add LST dependencies and setup docs
+- Update `package.json` with OpenRewrite dependencies (prefer optional peer dependencies if possible).
+- Document setup in `.framework/docs/lst-setup.md`.
+
+### [ ] Step: Verification
+- Run targeted unit tests from `src/` workspace.
+- Run `pnpm lint` and `pnpm check-types` from `src/`.
+- Perform manual indexing smoke test (Tree-sitter vs LST).
+- Write `{@artifacts_path}/report.md` with implementation and test summary.
