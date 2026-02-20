@@ -42,24 +42,36 @@ Save to `{@artifacts_path}/spec.md` with:
 - Delivery phases (incremental, testable milestones)
 - Verification approach using project lint/test commands
 
-### [ ] Step: Planning
+### [x] Step: Planning
+<!-- chat-id: e0c5ec70-d5c4-40f8-b5d6-87ec3a74a75b -->
 
-Create a detailed implementation plan based on `{@artifacts_path}/spec.md`.
+Implementation plan created based on `{@artifacts_path}/spec.md`.
 
-1. Break down the work into concrete tasks
-2. Each task should reference relevant contracts and include verification steps
-3. Replace the Implementation step below with the planned tasks
+### [ ] Step: Align requirements mode configuration
+- Update `.framework/modes/requirements.yaml` to match the spec (role definition, elicitation/validation gates, output spec, available tools).
+- Confirm schema expectations in `.framework/schema.json` and update if new fields are required.
+- Update `src/services/framework/__tests__/config-loader.spec.ts` to cover the requirements mode config loading behavior.
 
-Rule of thumb for step size: each step should represent a coherent unit of work (e.g., implement a component, add an API endpoint). Avoid steps that are too granular (single function) or too broad (entire feature).
+### [ ] Step: Implement requirements workflow orchestration
+- Add a requirements workflow runner under `src/services/framework/requirements/` to manage the question loop, “why” chains, assumption capture, and gating.
+- Integrate the requirements workflow into mode/task routing (likely `src/core/task/Task.ts` and/or prompt selection flow).
+- Add unit tests in `src/services/framework/__tests__/requirements-workflow.spec.ts` for questioning loops, SMART gating, and error conditions.
 
-Important: unit tests must be part of each implementation task, not separate tasks. Each task should implement the code and its tests together, if relevant.
+### [ ] Step: Generate requirements documents with metadata
+- Implement a writer utility to create `.framework/requirements/{issue-id}-requirements.md` with IEEE 830 sections and metadata front matter.
+- Ensure EARS syntax formatting for functional requirements and explicit acceptance criteria.
+- Add tests for document formatting and metadata serialization in `src/services/framework/__tests__/requirements-doc-writer.spec.ts`.
 
-If the feature is trivial and doesn't warrant full specification, update this workflow to remove unnecessary steps and explain the reasoning to the user.
+### [ ] Step: Integrate issue context and codebase validation
+- Accept GitHub issue inputs (ID, body, comments) using `src/services/webhooks/handlers/issue.ts` and related types.
+- Use `codebase_search` and `src/services/code-index/manager.ts` to validate feasibility and detect similar features.
+- Add tests with issue payload fixtures and stubbed codebase search in `src/services/framework/__tests__/requirements-issue-context.spec.ts`.
 
-Save to `{@artifacts_path}/plan.md`.
+### [ ] Step: Add approval flow and ntfy notification
+- Implement an ntfy client under `src/integrations/notifications/ntfy.ts` (using `fetch`) and wire it into the requirements workflow.
+- Send summary notifications with approval actions and persist approval status in the requirements document metadata.
+- Add unit tests in `src/integrations/notifications/__tests__/ntfy.spec.ts` for request/response handling and approval updates.
 
-### [ ] Step: Implementation
-
-This step should be replaced with detailed implementation tasks from the Planning step.
-
-If Planning didn't replace this step, execute the tasks in `{@artifacts_path}/plan.md`, updating checkboxes as you go. Run planned tests/lint and record results in plan.md.
+### [ ] Step: Verification
+- Run `pnpm lint` and `pnpm check-types` from the repo root.
+- Run `cd src && pnpm test <new-or-updated-test-files>` for the added specs.
