@@ -55,7 +55,8 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 
 ---
 
-### [ ] Step: Docker and Qdrant services
+### [x] Step: Docker and Qdrant services
+<!-- chat-id: 6dea4948-d406-484d-915d-e6cc8d91ece2 -->
 - Implement `DockerManager` and `QdrantManager` (new `src/services/docker/*` files).
 - Add unit tests for Docker detection, container lifecycle, and health polling.
 
