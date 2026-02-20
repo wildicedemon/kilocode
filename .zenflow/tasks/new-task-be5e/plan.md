@@ -73,7 +73,8 @@ Save to `{@artifacts_path}/plan.md`.
 - Update `.framework/schema.json` to require `modes.architect` and add property description
 - Extend/adjust tests in `src/services/framework/__tests__/config-loader.spec.ts` (or relevant tests) to cover schema/defaults changes
 
-### [ ] Step: Implement ntfy approval notification integration
+### [x] Step: Implement ntfy approval notification integration
+<!-- chat-id: 390761ee-de61-424a-bd02-7bedbdc976d8 -->
 - Review [./src/integrations/notifications/index.ts](./src/integrations/notifications/index.ts) for existing patterns
 - Add minimal helper or reuse existing notification path to POST to ntfy endpoint without new dependencies
 - If endpoint missing, surface a clear error path (architecture output should request config/approval input)

@@ -27,7 +27,7 @@ vi.mock("vscode", () => ({
 }))
 
 // Import after mocking
-import { showSystemNotification } from "../index"
+import { showSystemNotification, sendNtfyNotification } from "../index" // kilocode_change
 import * as os from "os"
 
 const mockedExeca = vi.mocked(execa)
@@ -283,3 +283,83 @@ describe("showSystemNotification", () => {
 		})
 	})
 })
+
+// kilocode_change start
+describe("sendNtfyNotification", () => {
+	const originalFetch = globalThis.fetch
+	const originalNtfyEndpoint = process.env.NTFY_ENDPOINT
+	const originalKiloEndpoint = process.env.KILOCODE_NTFY_ENDPOINT
+	let fetchMock: ReturnType<typeof vi.fn>
+
+	beforeEach(() => {
+		fetchMock = vi.fn()
+		;(globalThis as unknown as { fetch?: typeof fetch }).fetch = fetchMock as unknown as typeof fetch
+		delete process.env.NTFY_ENDPOINT
+		delete process.env.KILOCODE_NTFY_ENDPOINT
+	})
+
+	afterEach(() => {
+		;(globalThis as unknown as { fetch?: typeof fetch }).fetch = originalFetch
+		if (originalNtfyEndpoint === undefined) {
+			delete process.env.NTFY_ENDPOINT
+		} else {
+			process.env.NTFY_ENDPOINT = originalNtfyEndpoint
+		}
+		if (originalKiloEndpoint === undefined) {
+			delete process.env.KILOCODE_NTFY_ENDPOINT
+		} else {
+			process.env.KILOCODE_NTFY_ENDPOINT = originalKiloEndpoint
+		}
+	})
+
+	it("should throw when endpoint is missing", async () => {
+		await expect(
+			sendNtfyNotification({
+				message: "Test Message",
+			})
+		).rejects.toThrow("ntfy endpoint is required")
+
+		expect(fetchMock).not.toHaveBeenCalled()
+	})
+
+	it("should post message with headers and topic", async () => {
+		const mockedFetch = vi.mocked(fetchMock)
+		mockedFetch.mockResolvedValueOnce(new Response("", { status: 200, statusText: "OK" }) as Response)
+
+		await sendNtfyNotification({
+			endpoint: "https://ntfy.sh",
+			topic: "kilo",
+			title: "Architect Summary",
+			message: "Summary",
+			tags: ["architect", "approval"],
+			priority: 3,
+			click: "https://example.com",
+		})
+
+		expect(mockedFetch).toHaveBeenCalledWith("https://ntfy.sh/kilo", {
+			method: "POST",
+			headers: {
+				Title: "Architect Summary",
+				Tags: "architect,approval",
+				Priority: "3",
+				Click: "https://example.com",
+			},
+			body: "Summary",
+		})
+	})
+
+	it("should surface errors from ntfy", async () => {
+		const mockedFetch = vi.mocked(fetchMock)
+		mockedFetch.mockResolvedValueOnce(
+			new Response("nope", { status: 500, statusText: "Server Error" }) as Response
+		)
+
+		await expect(
+			sendNtfyNotification({
+				endpoint: "https://ntfy.sh",
+				message: "Summary",
+			})
+		).rejects.toThrow("ntfy notification failed with 500 Server Error")
+	})
+})
+// kilocode_change end

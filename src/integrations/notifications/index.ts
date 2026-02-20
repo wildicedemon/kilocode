@@ -8,6 +8,18 @@ interface NotificationOptions {
 	message: string
 }
 
+// kilocode_change start
+interface NtfyNotificationOptions {
+	endpoint?: string
+	topic?: string
+	title?: string
+	message: string
+	tags?: string[]
+	priority?: number
+	click?: string
+}
+// kilocode_change end
+
 async function showMacOSNotification(options: NotificationOptions): Promise<void> {
 	const { title, subtitle = "", message } = options
 
@@ -87,6 +99,63 @@ async function showLinuxNotification(options: NotificationOptions): Promise<void
 		throw new Error(`Failed to show Linux notification: ${error}`)
 	}
 }
+
+// kilocode_change start
+function resolveNtfyEndpoint(options: NtfyNotificationOptions): string | null {
+	const env = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process?.env
+	const configuredEndpoint = options.endpoint ?? env?.KILOCODE_NTFY_ENDPOINT ?? env?.NTFY_ENDPOINT
+
+	if (!configuredEndpoint) {
+		return null
+	}
+
+	const trimmedEndpoint = configuredEndpoint.endsWith("/") ? configuredEndpoint.slice(0, -1) : configuredEndpoint
+	if (options.topic) {
+		return `${trimmedEndpoint}/${options.topic}`
+	}
+
+	return configuredEndpoint
+}
+
+export async function sendNtfyNotification(options: NtfyNotificationOptions): Promise<void> {
+	const { message, title, tags, priority, click } = options
+
+	if (!message) {
+		throw new Error("ntfy notification message is required")
+	}
+
+	const endpoint = resolveNtfyEndpoint(options)
+	if (!endpoint) {
+		throw new Error("ntfy endpoint is required. Provide endpoint or set NTFY_ENDPOINT.")
+	}
+
+	const headers: Record<string, string> = {}
+	if (title) {
+		headers.Title = title
+	}
+	if (tags && tags.length > 0) {
+		headers.Tags = tags.join(",")
+	}
+	if (priority !== undefined) {
+		headers.Priority = `${priority}`
+	}
+	if (click) {
+		headers.Click = click
+	}
+
+	const response = await fetch(endpoint, {
+		method: "POST",
+		headers,
+		body: message,
+	})
+
+	if (!response.ok) {
+		const responseText = await response.text().catch(() => "")
+		const detail = responseText ? `: ${responseText}` : ""
+		throw new Error(`ntfy notification failed with ${response.status} ${response.statusText}${detail}`)
+	}
+}
+// kilocode_change end
 
 export async function showSystemNotification(options: NotificationOptions): Promise<void> {
 	try {
