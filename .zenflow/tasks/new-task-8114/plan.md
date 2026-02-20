@@ -61,6 +61,7 @@ Save to `{@artifacts_path}/plan.md`. If the feature is trivial and doesn't warra
 - Add unit tests for Docker detection, container lifecycle, and health polling.
 
 ### [ ] Step: VS Code command + status bar integration
+<!-- chat-id: 944763c6-5bb1-4fd4-acc8-82bf33845ce9 -->
 - Add status bar item + quick pick actions.
 - Register commands (`kilo.docker.startQdrant`, `kilo.docker.stopQdrant`, `kilo.docker.viewQdrantLogs`).
 - Add unit tests for command routing/status bar updates.
