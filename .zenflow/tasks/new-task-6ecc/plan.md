@@ -54,6 +54,7 @@ Implementation plan created based on `{@artifacts_path}/spec.md`.
 - Update `src/services/framework/__tests__/config-loader.spec.ts` to cover the requirements mode config loading behavior.
 
 ### [ ] Step: Implement requirements workflow orchestration
+<!-- chat-id: 0a2db66d-f277-4908-a627-65b9eab48c2b -->
 - Add a requirements workflow runner under `src/services/framework/requirements/` to manage the question loop, “why” chains, assumption capture, and gating.
 - Integrate the requirements workflow into mode/task routing (likely `src/core/task/Task.ts` and/or prompt selection flow).
 - Add unit tests in `src/services/framework/__tests__/requirements-workflow.spec.ts` for questioning loops, SMART gating, and error conditions.
