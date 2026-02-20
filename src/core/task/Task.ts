@@ -83,6 +83,7 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { RequirementsWorkflowRunner } from "../../services/framework/requirements" // kilocode_change
 
 // integrations
 import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
@@ -209,6 +210,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	readonly metadata: TaskMetadata
 
 	todoList?: TodoItem[]
+	private requirementsWorkflow?: RequirementsWorkflowRunner // kilocode_change
 
 	readonly rootTask: Task | undefined
 	readonly parentTask: Task | undefined
@@ -612,6 +614,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			this._taskMode = historyItem.mode || defaultModeSlug
 			this._taskApiConfigName = historyItem.apiConfigName
 			this.taskModeReady = Promise.resolve()
+			void this.initializeRequirementsWorkflow(provider) // kilocode_change
 			this.taskApiConfigReady = Promise.resolve()
 			TelemetryService.instance.captureTaskRestarted(this.taskId)
 
@@ -623,6 +626,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			this._taskMode = undefined
 			this._taskApiConfigName = undefined
 			this.taskModeReady = this.initializeTaskMode(provider)
+			this.taskModeReady = this.taskModeReady.then(() => this.initializeRequirementsWorkflow(provider)) // kilocode_change
 			this.taskApiConfigReady = this.initializeTaskApiConfigName(provider)
 			TelemetryService.instance.captureTaskCreated(this.taskId)
 
@@ -776,6 +780,21 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 			provider.log(errorMessage)
 		}
 	}
+
+	// kilocode_change start
+	private async initializeRequirementsWorkflow(provider: ClineProvider): Promise<void> {
+		const mode = this._taskMode ?? defaultModeSlug
+		if (mode !== "requirements") {
+			return
+		}
+		try {
+			this.requirementsWorkflow = new RequirementsWorkflowRunner()
+		} catch (error) {
+			const errorMessage = `Failed to initialize requirements workflow: ${error instanceof Error ? error.message : String(error)}`
+			provider.log(errorMessage)
+		}
+	}
+	// kilocode_change end
 
 	/**
 	 * Initialize the task API config name from the provider state.

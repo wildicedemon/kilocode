@@ -120,3 +120,14 @@ export async function showSystemNotification(options: NotificationOptions): Prom
 		console.error("Could not show system notification", error)
 	}
 }
+
+export {
+	applyRequirementsApprovalUpdate,
+	sendNtfyNotification,
+	sendRequirementsApprovalNotification,
+	type NtfyAction,
+	type NtfyConfig,
+	type NtfyNotificationOptions,
+	type NtfyNotificationResult,
+	type RequirementsApprovalNotificationOptions,
+} from "./ntfy" // kilocode_change
