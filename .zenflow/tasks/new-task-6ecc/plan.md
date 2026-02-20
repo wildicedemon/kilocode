@@ -47,7 +47,8 @@ Save to `{@artifacts_path}/spec.md` with:
 
 Implementation plan created based on `{@artifacts_path}/spec.md`.
 
-### [ ] Step: Align requirements mode configuration
+### [x] Step: Align requirements mode configuration
+<!-- chat-id: 6e796d0d-f7a6-4de9-93ed-f8728d8d5288 -->
 - Update `.framework/modes/requirements.yaml` to match the spec (role definition, elicitation/validation gates, output spec, available tools).
 - Confirm schema expectations in `.framework/schema.json` and update if new fields are required.
 - Update `src/services/framework/__tests__/config-loader.spec.ts` to cover the requirements mode config loading behavior.

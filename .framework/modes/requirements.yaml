@@ -22,6 +22,7 @@ customInstructions: |-
 
   Output specification:
   - Produce a formal requirements document at .framework/requirements/{issue-id}-requirements.md.
+  - Follow IEEE 830 structure for section ordering and completeness checks.
   - Include sections: Problem Statement, Goals and Objectives, Functional Requirements (numbered, EARS syntax), Non-Functional Requirements, Constraints and Assumptions, Acceptance Criteria, Dependencies and Impacts, Open Questions.
   - Add metadata front matter with requirement owner, issue reference (if any), and approval status.
 

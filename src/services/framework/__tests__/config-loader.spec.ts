@@ -54,6 +54,10 @@ describe('config-loader', () => {
       });
       expect(config.sdlc.research.enabled).toBe(true);
       expect(config.scanner.enabled).toBe(true);
+      expect(config.modes.requirements).toEqual({
+        enabled: true,
+        config: '.framework/modes/requirements.yaml',
+      });
     });
   });
 
